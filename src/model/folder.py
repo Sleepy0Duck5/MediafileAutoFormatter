@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Self
 
 from src.model.structable import Structable, extract_title
+from src.model.file import File, FileType
 
 
 class Folder(Structable):
@@ -8,6 +9,7 @@ class Folder(Structable):
         self._title = extract_title(absolute_path=absolute_path)
         self._absolute_path = absolute_path
         self._structs = []
+        self._number_of_files_by_type = {}
 
     def get_title(self) -> str:
         return self._title
@@ -16,7 +18,25 @@ class Folder(Structable):
         return self._absolute_path
 
     def append_struct(self, struct: Structable):
+        if isinstance(struct, File):
+            self._number_of_files_by_type[struct.get_file_type()] = (
+                self._number_of_files_by_type.get(struct.get_file_type(), 0) + 1
+            )
         self._structs.append(struct)
 
     def get_structs(self) -> List[Structable]:
         return self._structs
+
+    def get_files(self) -> List[File]:
+        return [x for x in self._structs if isinstance(x, File)]
+
+    def get_folders(self) -> List[Self]:
+        return [x for x in self._structs if isinstance(x, Folder)]
+
+    def get_number_of_files_by_type(self, file_type: FileType) -> int:
+        return self._number_of_files_by_type.get(file_type, 0)
+
+    def contains_subtitle_file(self) -> bool:
+        return (self.get_number_of_files_by_type(file_type=FileType.SUBTITLE) > 0) or (
+            self.get_number_of_files_by_type(file_type=FileType.ARCHIVED_SUBTITLE) > 0
+        )
