@@ -1,7 +1,8 @@
-import re, os
+import re
 
 from abc import ABCMeta
 from src.env_configs import EnvConfigs
+from src.errors import InvalidFolderNameException
 
 
 class Formatter(metaclass=ABCMeta):
@@ -17,5 +18,10 @@ class GeneralFormatter(Formatter):
         self._env_configs = env_configs
 
     def format_folder_name(self, folder_name: str) -> str:
-        # TODO: 특수기호 제외 regex
-        return folder_name
+        pattern = re.compile('[*\\￦|¦:"/?]')
+        replaced = pattern.sub(repl=" ", string=folder_name).strip()
+
+        if len(replaced) <= 0:
+            raise InvalidFolderNameException
+
+        return replaced

@@ -4,6 +4,7 @@ from enum import Enum
 class Constants:
     METADATA_FILENAME = "metadata"
     UNKNOWN = "unknown"
+    MAXIMUM_ARCHIVE_SIZE = 30000000  # 30MB
 
 
 class Extensions:

@@ -1,8 +1,12 @@
-class MediaRootNotFoundException(Exception):
+class AnalyzerException(Exception):
     pass
 
 
-class MediaNotFoundException(Exception):
+class MediaRootNotFoundException(AnalyzerException):
+    pass
+
+
+class MediaNotFoundException(AnalyzerException):
     pass
 
 
@@ -10,13 +14,17 @@ class TargetPathNotFoundException(Exception):
     pass
 
 
-class MetadataBuildException(Exception):
-    pass
-
-
-class UnsupportedAnalyzeException(Exception):
+class MetadataBuildException(AnalyzerException):
     pass
 
 
 class InvalidMediaTypeException(Exception):
+    pass
+
+
+class FormatterException(Exception):
+    pass
+
+
+class InvalidFolderNameException(FormatterException):
     pass

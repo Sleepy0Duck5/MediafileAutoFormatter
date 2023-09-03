@@ -1,15 +1,19 @@
-from typing import List, Self
+import os
+from typing import List, Self, Optional
 
-from src.model.structable import Structable, extract_title
+from src.model.structable import Structable
 from src.model.file import File, FileType
 
 
 class Folder(Structable):
     def __init__(self, absolute_path: str) -> None:
-        self._title = extract_title(absolute_path=absolute_path)
+        self._title = self._extract_title(absolute_path=absolute_path)
         self._absolute_path = absolute_path
         self._structs = []
         self._number_of_files_by_type = {}
+
+    def _extract_title(self, absolute_path: str) -> str:
+        return absolute_path.rsplit(sep=os.sep, maxsplit=1)[1]
 
     def get_title(self) -> str:
         return self._title
@@ -40,3 +44,11 @@ class Folder(Structable):
         return (self.get_number_of_files_by_type(file_type=FileType.SUBTITLE) > 0) or (
             self.get_number_of_files_by_type(file_type=FileType.ARCHIVED_SUBTITLE) > 0
         )
+
+
+class RestructedFolder(Folder):
+    def __init__(
+        self, absolute_path: str, original_folder: Optional[Folder] = None
+    ) -> None:
+        super().__init__(absolute_path)
+        self._original_folder = original_folder

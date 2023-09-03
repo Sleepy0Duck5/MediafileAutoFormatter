@@ -6,12 +6,21 @@ from loguru import logger
 from src.model.file import File, extract_extension
 from src.model.folder import Folder
 from src.env_configs import EnvConfigs
-from src.constants import FileType, Extensions
+from src.constants import FileType, Extensions, Constants
 
 
 def _is_archived_subtitle(absolute_path: str):
     try:
+        if not os.path.exists(absolute_path):
+            raise FileNotFoundError(f"Archived subtitle not found : {absolute_path}")
+
+        archive_size = os.path.getsize(filename=absolute_path)
+        if archive_size > Constants.MAXIMUM_ARCHIVE_SIZE:
+            logger.warning(f"Too big to extract archive : {archive_size} (byte)")
+            return False
+
         test_archive(absolute_path, verbosity=-1)
+
         return True
     except Exception as e:
         logger.warning(e)
