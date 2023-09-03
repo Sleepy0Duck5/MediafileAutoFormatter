@@ -1,18 +1,16 @@
 from abc import ABCMeta
-from typing import Optional, List
+from typing import List
 from loguru import logger
 
 from src.model.folder import Folder
-from src.model.file import File
-from src.model.metadata import Metadata, MediaMetadata, SeasonMetadata
+from src.model.metadata import Metadata, SeasonMetadata
 from src.model.structable import Structable
-from src.analyzer.metadata_reader import MetadataReader
 from src.analyzer.metadata_builder import (
     MetadataBuilder,
-    MediaMetadataBuilder,
+    MovieMetadataBuilder,
     TVMetadataBuilder,
 )
-from src.constants import Constants, Extensions, MediaType, FileType
+from src.constants import MediaType, FileType
 from src.errors import MediaRootNotFoundException, MediaNotFoundException
 from src.env_configs import EnvConfigs
 
@@ -27,7 +25,7 @@ class MediaAnalyzer(metaclass=ABCMeta):
         self,
         env_configs: EnvConfigs,
     ) -> None:
-        self._env_configs = env_configs
+        raise NotImplementedError
 
     def analyze(self, root: Folder) -> Metadata:
         raise NotImplementedError
@@ -35,7 +33,7 @@ class MediaAnalyzer(metaclass=ABCMeta):
 
 class GeneralMediaAnalyzer(MediaAnalyzer):
     def __init__(self, env_configs: EnvConfigs) -> None:
-        super().__init__(env_configs)
+        self._env_configs = env_configs
 
     def _get_builder(self):
         raise NotImplementedError
@@ -76,7 +74,7 @@ class GeneralMediaAnalyzer(MediaAnalyzer):
 
         return subtitles
 
-    def _analyze_subtitle(self, root: Folder) -> List[Structable]:
+    def _analyze_subtitles(self, root: Folder) -> List[Structable]:
         if root.contains_subtitle_file():
             return self._get_subtitle_file(folder=root)
 
@@ -95,13 +93,13 @@ class MovieAnalyzer(GeneralMediaAnalyzer):
         self._media_type = MediaType.MOVIE
 
     def _get_builder(self):
-        return MediaMetadataBuilder(self._media_type)
+        return MovieMetadataBuilder(self._media_type)
 
-    def _analyze(self, builder: MediaMetadataBuilder, root: Folder) -> None:
+    def _analyze(self, builder: MovieMetadataBuilder, root: Folder) -> None:
         super()._analyze(builder, root)
 
-        subtitle = self._analyze_subtitle(root=root)
-        builder.set_subtitle(subtitle=subtitle)
+        subtitles = self._analyze_subtitles(root=root)
+        builder.set_subtitles(subtitles=subtitles)
 
     def _find_media_root(self, root: Folder) -> Folder:
         if root.get_number_of_files_by_type(file_type=FileType.MEDIA) > 0:
@@ -157,14 +155,14 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             season_title = folder.get_title()
 
             if contains_season_suffix(str=season_title):
-                subtitle = self._analyze_subtitle(root=folder)
+                subtitles = self._analyze_subtitles(root=folder)
 
                 seasons[season_index] = SeasonMetadata(
                     title=builder.get_title(),
                     original_title=season_title,
                     root=media_root,
                     media_root=folder,
-                    subtitle=subtitle,
+                    subtitles=subtitles,
                 )
                 season_index += 1
 
@@ -172,14 +170,14 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             if media_root.get_number_of_files_by_type(FileType.MEDIA) <= 0:
                 raise MediaNotFoundException("TV media found but no seasons")
 
-            subtitle = self._analyze_subtitle(root=root)
+            subtitles = self._analyze_subtitles(root=root)
 
             seasons[season_index] = SeasonMetadata(
                 title=builder.get_title(),
                 original_title=media_root.get_title(),
                 root=root,
                 media_root=media_root,
-                subtitle=subtitle,
+                subtitles=subtitles,
             )
 
         return seasons

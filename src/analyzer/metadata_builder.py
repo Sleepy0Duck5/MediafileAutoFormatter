@@ -1,6 +1,6 @@
-from typing import Optional, List
+from typing import List
 
-from src.model.metadata import Metadata, MediaMetadata, TVMetadata, SeasonMetadata
+from src.model.metadata import Metadata, MovieMetadata, TVMetadata, SeasonMetadata
 from src.model.folder import Folder
 from src.model.structable import Structable
 from src.constants import MediaType
@@ -55,27 +55,24 @@ class MetadataBuilder:
         raise NotImplementedError
 
 
-class MediaMetadataBuilder(MetadataBuilder):
+class MovieMetadataBuilder(MetadataBuilder):
     def __init__(self, media_type: MediaType) -> None:
         super().__init__()
-        self._subtitle: List[Structable]
+        self._subtitles: List[Structable]
         self._media_type = media_type
 
-    def set_subtitle(self, subtitle: List[Structable]):
-        self._subtitle = subtitle
+    def set_subtitles(self, subtitles: List[Structable]):
+        self._subtitles = subtitles
 
     def build(self) -> Metadata:
         self._build_validation()
 
-        if not self._subtitle:
-            raise MetadataBuildException
-
-        return MediaMetadata(
+        return MovieMetadata(
             title=self._title,
             original_title=self._original_title,
             root=self._root,
             media_root=self._media_root,
-            subtitle=self._subtitle,
+            subtitles=self._subtitles,
         )
 
 

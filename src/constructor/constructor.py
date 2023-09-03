@@ -20,15 +20,21 @@ def _is_archived_subtitle(absolute_path: str):
 
 class Constructor(metaclass=ABCMeta):
     def __init__(self, env_configs: EnvConfigs) -> None:
-        self._env_confg = env_configs
+        raise NotImplementedError
 
     def struct(self, source_path: str) -> Folder:
         raise NotImplementedError
 
 
 class GeneralConstructor(Constructor):
+    def __init__(self, env_configs: EnvConfigs) -> None:
+        self._env_confg = env_configs
+
     def struct(self, source_path: str) -> Folder:
-        return self._search_and_struct(path=source_path)
+        try:
+            return self._search_and_struct(path=source_path)
+        except FileNotFoundError as e:
+            raise e
 
     def _get_file_type(self, absolute_path: str) -> FileType:
         extension = extract_extension(absolute_path=absolute_path)

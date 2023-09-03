@@ -4,7 +4,7 @@ from src.constructor.constructor import GeneralConstructor
 from src.analyzer.media_type_analyzer import GeneralMediaTypeAnalyzer
 from src.analyzer.media_analyzer_factory import MediaAnalyzerFactory
 from src.analyzer.metadata_reader import GenearlMetadataReader
-from src.restructor.restructor import GeneralRestructor
+from src.restructor.restructor_factory import RestructorFactory
 from src.executor.executor import GeneralExecutor
 from src.env_configs import EnvConfigs
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
             env_configs=env_configs, metadata_reader=GenearlMetadataReader()
         ),
         media_analyzer_factory=MediaAnalyzerFactory(env_configs=env_configs),
-        restructor=GeneralRestructor(),
+        restructor_factory=RestructorFactory(env_configs=env_configs),
         executor=GeneralExecutor(),
     )
 
