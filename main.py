@@ -1,5 +1,5 @@
 import argparse
-from src.manager import Manager
+from src.handler import Handler
 from src.constructor.constructor import GeneralConstructor
 from src.analyzer.media_type_analyzer import GeneralMediaTypeAnalyzer
 from src.analyzer.media_analyzer_factory import MediaAnalyzerFactory
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     print(args.source_path)
     print(args.target_path)
 
-    manager = Manager(
+    handler = Handler(
         constructor=GeneralConstructor(env_configs=env_configs),
         media_type_analyzer=GeneralMediaTypeAnalyzer(
             env_configs=env_configs, metadata_reader=GenearlMetadataReader()
@@ -31,4 +31,4 @@ if __name__ == "__main__":
         executor=GeneralExecutor(),
     )
 
-    manager.process(source_path=args.source_path, target_path=args.target_path)
+    handler.process(source_path=args.source_path, target_path=args.target_path)

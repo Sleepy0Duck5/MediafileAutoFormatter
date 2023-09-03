@@ -5,7 +5,7 @@ from src.restructor.restructor import Restructor
 from src.executor.executor import Executor
 
 
-class Manager:
+class Handler:
     def __init__(
         self,
         constructor: Constructor,
