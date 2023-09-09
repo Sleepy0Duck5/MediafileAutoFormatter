@@ -22,6 +22,10 @@ class InvalidMediaTypeException(Exception):
     pass
 
 
+class InvalidMetadataTypeException(Exception):
+    pass
+
+
 class FormatterException(Exception):
     pass
 

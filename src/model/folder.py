@@ -52,3 +52,6 @@ class RestructedFolder(Folder):
     ) -> None:
         super().__init__(absolute_path)
         self._original_folder = original_folder
+
+    def rename(self, new_name: str) -> None:
+        self._title = new_name

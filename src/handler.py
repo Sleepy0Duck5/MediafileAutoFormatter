@@ -41,5 +41,4 @@ class Handler:
             self._executor.execute(restructed_folder)
 
         except Exception as e:
-            logger.error(e)
-            raise e
+            logger.opt(exception=e).error(e)

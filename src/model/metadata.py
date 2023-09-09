@@ -2,6 +2,7 @@ from abc import ABCMeta
 from typing import Optional, List
 
 from src.constants import MediaType
+from src.model.file import File
 from src.model.folder import Folder
 from src.model.structable import Structable
 
@@ -37,38 +38,70 @@ class Metadata(metaclass=ABCMeta):
         return self._media_root
 
 
-class MovieMetadata(Metadata):
+class SubtitleContainingMetadata(Metadata):
+    def __init__(
+        self,
+        title: str,
+        original_title: str,
+        media_type: MediaType,
+        root: Folder,
+        media_root: Folder,
+        media_files: List[File],
+        subtitles: List[Structable],
+    ) -> None:
+        super().__init__(title, original_title, media_type, root, media_root)
+        self._media_files = media_files
+        self._subtitles = subtitles
+
+    def get_subtitles(self) -> List[Structable]:
+        return self._subtitles
+
+
+class MovieMetadata(SubtitleContainingMetadata):
     def __init__(
         self,
         title: str,
         original_title: str,
         root: Folder,
         media_root: Folder,
+        media_files: List[File],
         subtitles: List[Structable],
     ) -> None:
-        self._media_type = MediaType.MOVIE
-        self._subtitles = subtitles
-        super().__init__(title, original_title, self._media_type, root, media_root)
+        super().__init__(
+            title,
+            original_title,
+            MediaType.MOVIE,
+            root,
+            media_root,
+            media_files,
+            subtitles,
+        )
 
-    def get_subtitles(self) -> List[Structable]:
-        return self._subtitles
 
-
-class SeasonMetadata(Metadata):
+class SeasonMetadata(SubtitleContainingMetadata):
     def __init__(
         self,
         title: str,
         original_title: str,
         root: Folder,
         media_root: Folder,
+        media_files: List[File],
         subtitles: List[Structable],
+        season_index: int,
     ) -> None:
-        self._media_type = MediaType.TV
-        self._subtitles = subtitles
-        super().__init__(title, original_title, self._media_type, root, media_root)
+        super().__init__(
+            title,
+            original_title,
+            MediaType.TV,
+            root,
+            media_root,
+            media_files,
+            subtitles,
+        )
+        self._season_index = season_index
 
-    def get_subtitles(self) -> List[Structable]:
-        return self._subtitles
+    def get_season_index(self):
+        return self._season_index
 
 
 class TVMetadata(Metadata):

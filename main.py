@@ -5,6 +5,7 @@ from src.analyzer.media_type_analyzer import GeneralMediaTypeAnalyzer
 from src.analyzer.media_analyzer_factory import MediaAnalyzerFactory
 from src.analyzer.metadata_reader import GenearlMetadataReader
 from src.restructor.restructor_factory import RestructorFactory
+from src.restructor.subtitle_extractor import GeneralSubtitleExtractor
 from src.executor.executor import GeneralExecutor
 from src.env_configs import EnvConfigs
 
@@ -21,13 +22,18 @@ if __name__ == "__main__":
     print(args.source_path)
     print(args.target_path)
 
+    constructor = GeneralConstructor(env_configs=env_configs)
+
     handler = Handler(
-        constructor=GeneralConstructor(env_configs=env_configs),
+        constructor=constructor,
         media_type_analyzer=GeneralMediaTypeAnalyzer(
             env_configs=env_configs, metadata_reader=GenearlMetadataReader()
         ),
         media_analyzer_factory=MediaAnalyzerFactory(env_configs=env_configs),
-        restructor_factory=RestructorFactory(env_configs=env_configs),
+        restructor_factory=RestructorFactory(
+            env_configs=env_configs,
+            subtitle_extractor=GeneralSubtitleExtractor(constrcutor=constructor),
+        ),
         executor=GeneralExecutor(),
     )
 

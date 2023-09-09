@@ -5,6 +5,9 @@ class Constants:
     METADATA_FILENAME = "metadata"
     UNKNOWN = "unknown"
     MAXIMUM_ARCHIVE_SIZE = 30000000  # 30MB
+    MAXIMUM_FOLDER_NAME_LENGTH = 250
+    TEMP_SUBTITLE_FOLDER_NAME = "tmp_mediafile_auto_formatter_extracted_subtitle"
+    FILENAME_INDEX_ZFILL = 3
 
 
 class Extensions:
@@ -22,7 +25,8 @@ class FileType(Enum):
     SUBTITLE = 2
     ARCHIVED_SUBTITLE = 3
     NFO = 4
-    EXTRA = 9
+    EXTRA = 5
+    UNKNOWN = 9
 
 
 class DefaultEnvConifgs:
@@ -37,3 +41,7 @@ class DefaultEnvConifgs:
     FILE_WATCH = False
     FILE_WATCH_SOURCE_PATH = "/"
     FILE_WATCH_TARGET_PATH = "/"
+
+class SeasonAlias:
+    KOR_1 = "시즌"
+    ENG_1 = "season"

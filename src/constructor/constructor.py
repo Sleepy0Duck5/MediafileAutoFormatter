@@ -9,6 +9,7 @@ from src.env_configs import EnvConfigs
 from src.constants import FileType, Extensions, Constants
 
 
+# TODO : check if specific extension exists in archive
 def _is_archived_subtitle(absolute_path: str):
     try:
         if not os.path.exists(absolute_path):

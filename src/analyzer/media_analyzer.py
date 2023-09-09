@@ -2,6 +2,7 @@ from abc import ABCMeta
 from typing import List
 from loguru import logger
 
+from src.model.file import File
 from src.model.folder import Folder
 from src.model.metadata import Metadata, SeasonMetadata
 from src.model.structable import Structable
@@ -10,14 +11,14 @@ from src.analyzer.metadata_builder import (
     MovieMetadataBuilder,
     TVMetadataBuilder,
 )
-from src.constants import MediaType, FileType
+from src.constants import MediaType, FileType, SeasonAlias
 from src.errors import MediaRootNotFoundException, MediaNotFoundException
 from src.env_configs import EnvConfigs
 
 
 # TODO: 하드코딩 제거, regex 적용 필요
 def contains_season_suffix(str: str) -> bool:
-    return ("시즌" in str) or ("Season" in str) or ("season" in str)
+    return (SeasonAlias.KOR_1 in str) or (SeasonAlias.ENG_1 in str.lower())
 
 
 class MediaAnalyzer(metaclass=ABCMeta):
@@ -162,7 +163,9 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                     original_title=season_title,
                     root=media_root,
                     media_root=folder,
+                    media_files=self._get_media_files(root=folder),
                     subtitles=subtitles,
+                    season_index=season_index,
                 )
                 season_index += 1
 
@@ -177,7 +180,17 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                 original_title=media_root.get_title(),
                 root=root,
                 media_root=media_root,
+                media_files=self._get_media_files(root=media_root),
                 subtitles=subtitles,
+                season_index=season_index,
             )
 
         return seasons
+
+    def _get_media_files(self, root: Folder) -> List[File]:
+        media_files = []
+        for file in root.get_files():
+            if file.get_file_type == FileType.MEDIA:
+                media_files.append(file)
+
+        return media_files
