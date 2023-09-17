@@ -1,4 +1,6 @@
 import argparse
+from loguru import logger
+
 from src.handler import Handler
 from src.constructor.constructor import GeneralConstructor
 from src.analyzer.media_type_analyzer import GeneralMediaTypeAnalyzer
@@ -8,21 +10,29 @@ from src.restructor.restructor_factory import RestructorFactory
 from src.restructor.subtitle_extractor import GeneralSubtitleExtractor
 from src.executor.executor import GeneralExecutor
 from src.env_configs import EnvConfigs
+from src.constants import Constants
 
-if __name__ == "__main__":
+
+def _init_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("source_path", type=str)
     parser.add_argument("--target_path", type=str, default="", required=False)
 
-    args = parser.parse_args()
+    return parser
+
+
+if __name__ == "__main__":
+    args = _init_parser().parse_args()
 
     env_configs = EnvConfigs()
 
-    print(args.source_path)
-    print(args.target_path)
+    logger.info(args.source_path)
+    logger.info(args.target_path)
 
     constructor = GeneralConstructor(env_configs=env_configs)
+
+    logger.add(Constants.LOG_FILE_NAME)
 
     handler = Handler(
         constructor=constructor,

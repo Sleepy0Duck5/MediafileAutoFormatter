@@ -6,7 +6,7 @@ class Constants:
     UNKNOWN = "unknown"
     MAXIMUM_ARCHIVE_SIZE = 30000000  # 30MB
     MAXIMUM_FOLDER_NAME_LENGTH = 250
-    TEMP_SUBTITLE_FOLDER_NAME = "tmp_mediafile_auto_formatter_extracted_subtitle"
+    LOG_FILE_NAME = "mediafile_auto_formatter.log"
     FILENAME_INDEX_ZFILL = 3
 
 
