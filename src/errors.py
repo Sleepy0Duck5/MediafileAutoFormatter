@@ -26,6 +26,14 @@ class InvalidMetadataTypeException(Exception):
     pass
 
 
+class EpisodeIndexNotFoundException(Exception):
+    pass
+
+
+class FileNamePatternNotFoundException(Exception):
+    pass
+
+
 class FormatterException(Exception):
     pass
 

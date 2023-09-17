@@ -88,6 +88,7 @@ class SeasonMetadata(SubtitleContainingMetadata):
         media_files: List[File],
         subtitles: List[Structable],
         season_index: int,
+        episode_files: dict[int, File],
     ) -> None:
         super().__init__(
             title,
@@ -99,6 +100,7 @@ class SeasonMetadata(SubtitleContainingMetadata):
             subtitles,
         )
         self._season_index = season_index
+        self._episode_files = episode_files
 
     def get_season_index(self):
         return self._season_index

@@ -11,8 +11,14 @@ from src.analyzer.metadata_builder import (
     MovieMetadataBuilder,
     TVMetadataBuilder,
 )
+from src.analyzer.token import Token
 from src.constants import MediaType, FileType, SeasonAlias
-from src.errors import MediaRootNotFoundException, MediaNotFoundException
+from src.errors import (
+    MediaRootNotFoundException,
+    MediaNotFoundException,
+    EpisodeIndexNotFoundException,
+    FileNamePatternNotFoundException,
+)
 from src.env_configs import EnvConfigs
 
 
@@ -157,15 +163,17 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
             if contains_season_suffix(str=season_title):
                 subtitles = self._analyze_subtitles(root=folder)
+                media_files = self._get_media_files(root=media_root)
 
                 seasons[season_index] = SeasonMetadata(
                     title=builder.get_title(),
                     original_title=season_title,
                     root=media_root,
                     media_root=folder,
-                    media_files=self._get_media_files(root=folder),
+                    media_files=media_files,
                     subtitles=subtitles,
                     season_index=season_index,
+                    episode_files=self._get_episodes(media_files),
                 )
                 season_index += 1
 
@@ -174,15 +182,17 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                 raise MediaNotFoundException("TV media found but no seasons")
 
             subtitles = self._analyze_subtitles(root=root)
+            media_files = self._get_media_files(root=media_root)
 
             seasons[season_index] = SeasonMetadata(
                 title=builder.get_title(),
                 original_title=media_root.get_title(),
                 root=root,
                 media_root=media_root,
-                media_files=self._get_media_files(root=media_root),
+                media_files=media_files,
                 subtitles=subtitles,
                 season_index=season_index,
+                episode_files=self._get_episodes(media_files),
             )
 
         return seasons
@@ -190,7 +200,85 @@ class TVAnalyzer(GeneralMediaAnalyzer):
     def _get_media_files(self, root: Folder) -> List[File]:
         media_files = []
         for file in root.get_files():
-            if file.get_file_type == FileType.MEDIA:
+            if file.get_file_type() == FileType.MEDIA:
                 media_files.append(file)
 
         return media_files
+
+    def _get_episodes(self, media_files: List[File]) -> dict[int, File]:
+        episodes = {}
+
+        sorted(media_files, key=lambda file: file.get_title())
+
+        episode_index_not_found_files = []
+
+        file_name_suffix = self._get_file_name_suffix(media_files=media_files)
+
+        for media_file in media_files:
+            file_title = media_file.get_title()
+
+            try:
+                episode_index = self._extract_episode_index_by_file_name(
+                    file_name=file_title, suffix=file_name_suffix
+                )
+            except EpisodeIndexNotFoundException as e:
+                logger.info(f"Episode index not found from {file_title}")
+                episode_index_not_found_files.append(media_file)
+                continue
+
+            if episodes.get(episode_index, None):
+                logger.info(f"Duplicated episode index found from {file_title}")
+                episode_index_not_found_files.append(media_file)
+                continue
+
+            episodes[episode_index] = media_file
+
+        return episodes
+
+    def _get_file_name_suffix(self, media_files: List[File]) -> str:
+        saved_tokens: List[Token] = []
+
+        for media_file in media_files:
+            title = media_file.get_title()
+            splited_tokens = title.split(" ")
+
+            for token in splited_tokens:
+                self._update_saved_tokens(saved_tokens=saved_tokens, input_token=token)
+
+        suffix_token_last_index = -1
+        for idx in range(len(saved_tokens)):
+            if saved_tokens[idx].get_count() <= 1:
+                suffix_token_last_index = idx - 1
+                break
+
+        if suffix_token_last_index >= 0:
+            suffix = ""
+
+            for idx in range(len(saved_tokens)):
+                if idx > suffix_token_last_index:
+                    break
+                suffix += saved_tokens[idx].get_str() + " "
+
+            return suffix
+
+        raise FileNamePatternNotFoundException(f"File name pattern not found.")
+
+    def _update_saved_tokens(self, saved_tokens: List[Token], input_token: str):
+        for saved_token in saved_tokens:
+            if saved_token.get_str() == input_token:
+                saved_token.count_up()
+                return
+
+        saved_tokens.append(Token(str=input_token))
+
+    def _extract_episode_index_by_file_name(self, file_name: str, suffix: str) -> int:
+        suffix_removed = file_name.replace(suffix, "")
+        splited = suffix_removed.split(" ")
+
+        if len(splited) > 0:
+            str_index = splited[0]
+
+            if str_index.isnumeric():
+                return int(str_index)
+
+        raise EpisodeIndexNotFoundException

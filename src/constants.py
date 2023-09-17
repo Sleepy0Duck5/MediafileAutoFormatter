@@ -42,6 +42,7 @@ class DefaultEnvConifgs:
     FILE_WATCH_SOURCE_PATH = "/"
     FILE_WATCH_TARGET_PATH = "/"
 
+
 class SeasonAlias:
     KOR_1 = "시즌"
     ENG_1 = "season"
