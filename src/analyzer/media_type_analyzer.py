@@ -4,6 +4,7 @@ from src.model.folder import Folder
 from src.analyzer.metadata_reader import MetadataReader
 from src.constants import Constants, Extensions, MediaType, FileType
 from src.env_configs import EnvConfigs
+from src.analyzer.error import MediaNotFoundException
 
 
 def _is_user_define_metadata_included(root: Folder) -> bool:
@@ -35,6 +36,11 @@ class GeneralMediaTypeAnalyzer(MediaTypeAnalyzer):
 
     def _analyze_media_type(self, root: Folder) -> MediaType:
         total_count_of_media_file = self._count_media_files_recursively(root=root)
+
+        if total_count_of_media_file <= 0:
+            raise MediaNotFoundException(
+                f"No media file found in {root.get_absolute_path()}"
+            )
 
         if total_count_of_media_file == 1:
             return MediaType.MOVIE

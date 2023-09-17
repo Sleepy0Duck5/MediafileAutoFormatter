@@ -3,6 +3,7 @@ from abc import ABCMeta
 from patoolib import extract_archive
 from loguru import logger
 from typing import List, Optional
+import tempfile
 
 from src.model.structable import Structable
 from src.model.file import File
@@ -92,11 +93,7 @@ class GeneralSubtitleExtractor(SubtitleExtractor):
         if subtitle.get_file_type() != FileType.ARCHIVED_SUBTITLE:
             raise InvalidMediaTypeException
 
-        # 임시 경로에 압축 해제?
-        temp_extracted_subtitle_path = os.path.join(
-            metadata.get_root().get_absolute_path(),
-            Constants.TEMP_SUBTITLE_FOLDER_NAME,
-        )
+        temp_extracted_subtitle_path = tempfile.TemporaryDirectory().name
 
         extract_archive(
             archive=subtitle.get_absolute_path(),

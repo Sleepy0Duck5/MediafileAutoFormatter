@@ -6,19 +6,19 @@ from src.model.file import File
 from src.model.folder import Folder
 from src.model.metadata import Metadata, SeasonMetadata
 from src.model.structable import Structable
+from src.model.token import Token
 from src.analyzer.metadata_builder import (
     MetadataBuilder,
     MovieMetadataBuilder,
     TVMetadataBuilder,
 )
-from src.analyzer.token import Token
-from src.constants import MediaType, FileType, SeasonAlias
-from src.errors import (
-    MediaRootNotFoundException,
+from src.analyzer.error import (
     MediaNotFoundException,
+    MediaRootNotFoundException,
     EpisodeIndexNotFoundException,
     FileNamePatternNotFoundException,
 )
+from src.constants import MediaType, FileType, SeasonAlias
 from src.env_configs import EnvConfigs
 
 
@@ -62,6 +62,14 @@ class GeneralMediaAnalyzer(MediaAnalyzer):
 
     def _find_media_root(self, root: Folder) -> Folder:
         raise NotImplementedError
+
+    def _get_media_files(self, root: Folder) -> List[File]:
+        media_files = []
+        for file in root.get_files():
+            if file.get_file_type() == FileType.MEDIA:
+                media_files.append(file)
+
+        return media_files
 
     # TODO: folder 내에 여러 자막이 있는 경우, 여러 파일 설정 필요
     def _get_subtitle_file(self, folder: Folder) -> List[Structable]:
@@ -107,6 +115,9 @@ class MovieAnalyzer(GeneralMediaAnalyzer):
 
         subtitles = self._analyze_subtitles(root=root)
         builder.set_subtitles(subtitles=subtitles)
+
+        media_files = self._get_media_files(root=builder.get_media_root())
+        builder.set_media_files(media_files=media_files)
 
     def _find_media_root(self, root: Folder) -> Folder:
         if root.get_number_of_files_by_type(file_type=FileType.MEDIA) > 0:
@@ -196,14 +207,6 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             )
 
         return seasons
-
-    def _get_media_files(self, root: Folder) -> List[File]:
-        media_files = []
-        for file in root.get_files():
-            if file.get_file_type() == FileType.MEDIA:
-                media_files.append(file)
-
-        return media_files
 
     def _get_episodes(self, media_files: List[File]) -> dict[int, File]:
         episodes = {}

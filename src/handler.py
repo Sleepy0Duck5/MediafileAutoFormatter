@@ -36,9 +36,7 @@ class Handler:
                 media_type=media_type
             ).restruct(metadata=metadata, target_path=target_path)
 
-            raise NotImplementedError("WIP")
-
-            self._executor.execute(restructed_folder)
+            self._executor.execute(new_root_folder=restructed_folder, metadata=metadata)
 
         except Exception as e:
             logger.opt(exception=e).error(e)

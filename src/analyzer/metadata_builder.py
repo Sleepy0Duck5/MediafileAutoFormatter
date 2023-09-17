@@ -2,9 +2,10 @@ from typing import List
 
 from src.model.metadata import Metadata, MovieMetadata, TVMetadata, SeasonMetadata
 from src.model.folder import Folder
+from src.model.file import File
 from src.model.structable import Structable
 from src.constants import MediaType
-from src.errors import MetadataBuildException
+from src.analyzer.error import MetadataBuildException
 
 
 class MetadataBuilder:
@@ -35,7 +36,7 @@ class MetadataBuilder:
     def get_media_root(self) -> Folder:
         return self._media_root
 
-    def _build_validation(self):
+    def _build_validation(self) -> None:
         if not self._title:
             raise MetadataBuildException
 
@@ -61,8 +62,17 @@ class MovieMetadataBuilder(MetadataBuilder):
         self._subtitles: List[Structable]
         self._media_type = media_type
 
-    def set_subtitles(self, subtitles: List[Structable]):
+    def set_subtitles(self, subtitles: List[Structable]) -> None:
         self._subtitles = subtitles
+
+    def set_media_files(self, media_files: List[File]) -> None:
+        self._media_files = media_files
+
+    def _build_validation(self) -> None:
+        super()._build_validation()
+
+        if not self._media_files:
+            raise MetadataBuildException
 
     def build(self) -> Metadata:
         self._build_validation()
@@ -72,6 +82,7 @@ class MovieMetadataBuilder(MetadataBuilder):
             original_title=self._original_title,
             root=self._root,
             media_root=self._media_root,
+            media_files=self._media_files,
             subtitles=self._subtitles,
         )
 
@@ -85,11 +96,14 @@ class TVMetadataBuilder(MetadataBuilder):
     def set_seasons(self, seasons: dict[int, SeasonMetadata]):
         self._seasons = seasons
 
-    def build(self) -> Metadata:
-        self._build_validation()
+    def _build_validation(self) -> None:
+        super()._build_validation()
 
         if not self._seasons:
             raise MetadataBuildException
+
+    def build(self) -> Metadata:
+        self._build_validation()
 
         return TVMetadata(
             title=self._title,

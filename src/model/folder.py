@@ -55,3 +55,6 @@ class RestructedFolder(Folder):
 
     def rename(self, new_name: str) -> None:
         self._title = new_name
+
+    def get_original_folder(self) -> Optional[Folder]:
+        return self._original_folder

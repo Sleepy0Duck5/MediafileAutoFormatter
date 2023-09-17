@@ -3,7 +3,8 @@ from abc import ABCMeta
 
 from src.env_configs import EnvConfigs
 from src.model.metadata import Metadata, SeasonMetadata
-from src.errors import InvalidFolderNameException, InvalidMediaTypeException
+from src.formatter.errors import InvalidFolderNameException
+from src.errors import InvalidMediaTypeException
 from src.constants import Constants, MediaType
 
 

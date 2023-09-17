@@ -1,32 +1,29 @@
 import os
 from abc import ABCMeta
-from patoolib import extract_archive
 from loguru import logger
 from typing import List, Optional
 
 from src.model.structable import Structable
-from src.model.file import File
+from src.model.file import File, RestructedFile
 from src.model.folder import Folder, RestructedFolder
 from src.model.metadata import Metadata, MovieMetadata
 from src.formatter.formatter import Formatter
-from src.restructor.resturct_logger import GeneralRestructLogger
 from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
-    GeneralSubtitleExtractor,
 )
 from src.env_configs import EnvConfigs
-from src.errors import TargetPathNotFoundException, InvalidMediaTypeException
-from src.constants import FileType, Constants
+from src.restructor.errors import TargetPathNotFoundException
+from src.constants import FileType
 
 
 class Restructor(metaclass=ABCMeta):
     def __init__(self, env_configs: EnvConfigs, formatter: Formatter) -> None:
         raise NotImplementedError
 
-    def restruct(self, metadata: Metadata, target_path: str) -> Folder:
+    def restruct(self, metadata: Metadata, target_path: str) -> RestructedFolder:
         raise NotImplementedError
 
-    def _extract_subtitles(self, metadata: Metadata) -> dict[int, Folder]:
+    def _extract_subtitle(self, metadata: Metadata) -> dict[int, Folder]:
         raise NotImplementedError
 
 
@@ -39,7 +36,6 @@ class GeneralRestructor(Restructor):
     ) -> None:
         self._env_configs = env_configs
         self._formatter = formatter
-        self._restruct_logger = GeneralRestructLogger()
         self._subtitle_extractor = subtitle_extractor
 
     def _create_new_root_folder(
@@ -53,54 +49,74 @@ class GeneralRestructor(Restructor):
 
 
 class MovieRestructor(GeneralRestructor):
-    def restruct(self, metadata: MovieMetadata, target_path: str) -> Folder:
+    def restruct(self, metadata: MovieMetadata, target_path: str) -> RestructedFolder:
         if not os.path.exists(path=target_path):
             raise TargetPathNotFoundException
 
-        root_folder = self._create_new_root_folder(
+        new_root_folder = self._create_new_root_folder(
             metadata=metadata, target_path=target_path
         )
 
-        self._restruct_subtitle(root_folder=root_folder, metadata=metadata)
-        self._restruct_mediafile(root_folder=root_folder, metadata=metadata)
+        self._restruct_subtitle(
+            root_folder=new_root_folder,
+            subtitles=metadata.get_subtitles(),
+            metadata=metadata,
+        )
+        self._restruct_mediafile(root_folder=new_root_folder, metadata=metadata)
 
-        return root_folder
+        return new_root_folder
 
     def _restruct_subtitle(
-        self, root_folder: RestructedFolder, metadata: MovieMetadata
+        self,
+        root_folder: RestructedFolder,
+        subtitles: List[Structable],
+        metadata: Metadata,
     ) -> None:
-        subtitles = metadata.get_subtitles()
+        if len(subtitles) <= 0:
+            return
 
-        if subtitles:
-            subtitle_folder = self._extract_subtitles(metadata=metadata)
-            if not subtitle_folder:
-                for subtitle in subtitles:
-                    if isinstance(subtitle, Folder):
-                        subtitle_folder = subtitle
-                        break
+        selected_subtitle = self._get_subtitle(subtitles=subtitles, metadata=metadata)
 
-            if subtitle_folder:
-                selected_subtitle = self._select_subtitle(folder=subtitle_folder)
-                if selected_subtitle:
-                    root_folder.append_struct(selected_subtitle)
+        if selected_subtitle:
+            new_file_name = (
+                metadata.get_title()
+                + "."
+                + self._env_configs._SUBTITLE_SUFFIX
+                + "."
+                + selected_subtitle.get_extension()
+            )
+            new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
 
-    def _extract_subtitles(self, metadata: MovieMetadata) -> Optional[Folder]:
-        subtitles = metadata.get_subtitles()
+            root_folder.append_struct(
+                RestructedFile(absolute_path=new_path, original_file=selected_subtitle)
+            )
 
+    def _get_subtitle(
+        self,
+        subtitles: List[Structable],
+        metadata: Metadata,
+    ) -> Optional[File]:
         for subtitle in subtitles:
-            if (
-                isinstance(subtitle, File)
-                and subtitle.get_file_type() == FileType.ARCHIVED_SUBTITLE
-            ):
-                extracted_folder = self._subtitle_extractor.extract_archived_subtitle(
-                    subtitle=subtitle, metadata=metadata
-                )
+            if isinstance(subtitle, File):
+                if subtitle.get_file_type() == FileType.SUBTITLE:
+                    return subtitle
 
-                return extracted_folder
+                if subtitle.get_file_type() == FileType.ARCHIVED_SUBTITLE:
+                    extracted_folder = (
+                        self._subtitle_extractor.extract_archived_subtitle(
+                            subtitle=subtitle, metadata=metadata
+                        )
+                    )
+                    return self._select_subtitle_from_folder(folder=extracted_folder)
 
-        return None
+                raise NotImplementedError
 
-    def _select_subtitle(self, folder: Folder) -> Optional[File]:
+            if isinstance(subtitle, Folder):
+                return self._select_subtitle_from_folder(folder=subtitle)
+
+            raise NotImplementedError
+
+    def _select_subtitle_from_folder(self, folder: Folder) -> Optional[File]:
         for subtitle in folder.get_files():
             if subtitle.get_file_type() == FileType.SUBTITLE:
                 return subtitle
@@ -110,10 +126,22 @@ class MovieRestructor(GeneralRestructor):
     def _restruct_mediafile(
         self, root_folder: RestructedFolder, metadata: MovieMetadata
     ) -> None:
-        for file in metadata.get_media_root().get_files():
-            if file.get_file_type() == FileType.MEDIA:
-                root_folder.append_struct(struct=file)
-                break
+        index = 1
+
+        for file in metadata.get_media_files():
+            new_title = metadata.get_title()
+
+            # Add index if multiple movie file exists
+            if len(metadata.get_media_files()) > 1:
+                new_title = f"{new_title}({index})"
+                index += 1
+
+            new_file_name = new_title + "." + file.get_extension()
+            new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
+
+            root_folder.append_struct(
+                struct=RestructedFile(absolute_path=new_path, original_file=file)
+            )
 
 
 class TVRestructor(GeneralRestructor):
