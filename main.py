@@ -10,7 +10,7 @@ from src.restructor.restructor_factory import RestructorFactory
 from src.restructor.subtitle_extractor import GeneralSubtitleExtractor
 from src.executor.executor import GeneralExecutor
 from src.env_configs import EnvConfigs
-from src.constants import Constants
+from src.constants import Log
 
 
 def _init_parser() -> argparse.ArgumentParser:
@@ -27,12 +27,12 @@ if __name__ == "__main__":
 
     env_configs = EnvConfigs()
 
-    logger.info(args.source_path)
-    logger.info(args.target_path)
+    logger.add(Log.LOG_FILE_NAME, rotation=Log.LOG_FILE_ROTATION)
+    logger.info("Mediafile auto formatter start")
+    logger.info(f"source_path={args.source_path}")
+    logger.info(f"target_path={args.target_path}")
 
     constructor = GeneralConstructor(env_configs=env_configs)
-
-    logger.add(Constants.LOG_FILE_NAME)
 
     handler = Handler(
         constructor=constructor,

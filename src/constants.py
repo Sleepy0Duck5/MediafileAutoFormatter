@@ -6,8 +6,12 @@ class Constants:
     UNKNOWN = "unknown"
     MAXIMUM_ARCHIVE_SIZE = 30000000  # 30MB
     MAXIMUM_FOLDER_NAME_LENGTH = 250
-    LOG_FILE_NAME = "mediafile_auto_formatter.log"
     FILENAME_INDEX_ZFILL = 3
+
+
+class Log:
+    LOG_FILE_NAME = "mediafile_auto_formatter.log"
+    LOG_FILE_ROTATION = "500 MB"
 
 
 class Extensions:

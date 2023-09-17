@@ -12,7 +12,7 @@ from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
 )
 from src.env_configs import EnvConfigs
-from src.restructor.errors import TargetPathNotFoundException
+from src.errors import DirectoryNotFoundException
 from src.constants import FileType
 
 
@@ -51,7 +51,7 @@ class GeneralRestructor(Restructor):
 class MovieRestructor(GeneralRestructor):
     def restruct(self, metadata: MovieMetadata, target_path: str) -> RestructedFolder:
         if not os.path.exists(path=target_path):
-            raise TargetPathNotFoundException
+            raise DirectoryNotFoundException
 
         new_root_folder = self._create_new_root_folder(
             metadata=metadata, target_path=target_path
@@ -75,46 +75,58 @@ class MovieRestructor(GeneralRestructor):
         if len(subtitles) <= 0:
             return
 
-        selected_subtitle = self._get_subtitle(subtitles=subtitles, metadata=metadata)
-
-        if selected_subtitle:
-            new_file_name = (
-                metadata.get_title()
-                + "."
-                + self._env_configs._SUBTITLE_SUFFIX
-                + "."
-                + selected_subtitle.get_extension()
-            )
-            new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
-
-            root_folder.append_struct(
-                RestructedFile(absolute_path=new_path, original_file=selected_subtitle)
+        for subtitle_struct in subtitles:
+            selected_subtitle_file = self._get_subtitle_file(
+                subtitle=subtitle_struct, metadata=metadata
             )
 
-    def _get_subtitle(
+            if selected_subtitle_file:
+                new_file_name = (
+                    metadata.get_title()
+                    + "."
+                    + self._env_configs._SUBTITLE_SUFFIX
+                    + "."
+                    + selected_subtitle_file.get_extension()
+                )
+                new_file_path = os.path.join(
+                    root_folder.get_absolute_path(), new_file_name
+                )
+
+                root_folder.append_struct(
+                    RestructedFile(
+                        absolute_path=new_file_path,
+                        original_file=selected_subtitle_file,
+                    )
+                )
+
+                # TODO: Backup subtitle
+                # subtitle_backup = self._create_subtitle_backup_folder(
+                #     subtitle=subtitle_struct,
+                #     new_root_path=root_folder.get_absolute_path(),
+                # )
+                # root_folder.append_struct(subtitle_backup)
+
+    def _get_subtitle_file(
         self,
-        subtitles: List[Structable],
+        subtitle: Structable,
         metadata: Metadata,
     ) -> Optional[File]:
-        for subtitle in subtitles:
-            if isinstance(subtitle, File):
-                if subtitle.get_file_type() == FileType.SUBTITLE:
-                    return subtitle
+        if isinstance(subtitle, File):
+            if subtitle.get_file_type() == FileType.SUBTITLE:
+                return subtitle
 
-                if subtitle.get_file_type() == FileType.ARCHIVED_SUBTITLE:
-                    extracted_folder = (
-                        self._subtitle_extractor.extract_archived_subtitle(
-                            subtitle=subtitle, metadata=metadata
-                        )
-                    )
-                    return self._select_subtitle_from_folder(folder=extracted_folder)
-
-                raise NotImplementedError
-
-            if isinstance(subtitle, Folder):
-                return self._select_subtitle_from_folder(folder=subtitle)
+            if subtitle.get_file_type() == FileType.ARCHIVED_SUBTITLE:
+                extracted_folder = self._subtitle_extractor.extract_archived_subtitle(
+                    subtitle=subtitle, metadata=metadata
+                )
+                return self._select_subtitle_from_folder(folder=extracted_folder)
 
             raise NotImplementedError
+
+        if isinstance(subtitle, Folder):
+            return self._select_subtitle_from_folder(folder=subtitle)
+
+        raise NotImplementedError
 
     def _select_subtitle_from_folder(self, folder: Folder) -> Optional[File]:
         for subtitle in folder.get_files():
@@ -122,6 +134,16 @@ class MovieRestructor(GeneralRestructor):
                 return subtitle
 
         return None
+
+    def _create_subtitle_backup_folder(
+        self, subtitle: Structable, new_root_path: str
+    ) -> RestructedFolder:
+        backup_path = os.path.join(new_root_path, "SubtitleBackup")
+
+        subtitle_backup = RestructedFolder(absolute_path=backup_path)
+        subtitle_backup.append_struct(subtitle)
+
+        return subtitle_backup
 
     def _restruct_mediafile(
         self, root_folder: RestructedFolder, metadata: MovieMetadata

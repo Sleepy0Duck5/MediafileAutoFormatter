@@ -1,11 +1,13 @@
 import os
+import shutil
 from abc import ABCMeta
 from loguru import logger
 
-from src.model.folder import RestructedFolder
+from src.model.folder import Folder, RestructedFolder
 from src.model.file import RestructedFile
 from src.model.metadata import Metadata
 from src.executor.errors import FailedToCreateDirectoryException
+from src.errors import DirectoryNotFoundException
 
 
 class Executor(metaclass=ABCMeta):
@@ -23,8 +25,17 @@ class GeneralExecutor(Executor):
                 folder=new_root_folder,
                 absolute_path=new_root_folder.get_absolute_path(),
             )
+
+            # TODO: Move original directory to src folder
+            # self._move_directory(
+            #     src_path=metadata.get_root().get_absolute_path(),
+            #     target_path=new_root_folder.get_absolute_path(),
+            # )
+
+            # TODO: Save log file at target directory
         except Exception as e:
-            logger.info(e)
+            logger.error(e)
+            # TODO: Save log file at source directory
 
     def _execute(self, folder: RestructedFolder, absolute_path: str) -> None:
         new_directory_path = self._create_directory(
@@ -45,7 +56,9 @@ class GeneralExecutor(Executor):
             new_directory_path = folder.get_absolute_path()
 
         if os.path.exists(new_directory_path):
-            raise FailedToCreateDirectoryException("New root folder already exists!")
+            raise FailedToCreateDirectoryException(
+                f"Failed to create directory : Directory already exists! {new_directory_path}"
+            )
 
         os.mkdir(new_directory_path)
         logger.info(f"New directory created {new_directory_path}")
@@ -54,17 +67,36 @@ class GeneralExecutor(Executor):
 
     def _move_file(self, file: RestructedFile) -> None:
         try:
-            src = file.get_original_file().get_absolute_path()
-            if not os.path.exists(src):
-                raise FileNotFoundError(f"move_file failed : file not found in {src}")
-
-            target = file.get_absolute_path()
-            if os.path.exists(target):
-                raise FileExistsError(
-                    f"move_file failed : file already exists in {target}"
+            src_path = file.get_original_file().get_absolute_path()
+            if not os.path.exists(src_path):
+                raise FileNotFoundError(
+                    f"Move file failed : File not found in {src_path}"
                 )
 
-            os.rename(src, target)
-            logger.info(f"File moved successfuly : {src} -> {target}")
+            target_path = file.get_absolute_path()
+            if os.path.exists(target_path):
+                raise FileExistsError(
+                    f"Move file failed : File already exists in {target_path}"
+                )
+
+            os.rename(src_path, target_path)
+            logger.info(f"File moved successfuly : {src_path} -> {target_path}")
+        except Exception as e:
+            raise e
+
+    def _move_directory(self, src_path: str, target_path: str) -> None:
+        try:
+            if not os.path.exists(src_path):
+                raise DirectoryNotFoundException(
+                    f"Move directory failed : Directory not found in {src_path}"
+                )
+
+            if os.path.exists(target_path):
+                raise FileExistsError(
+                    f"Move directory failed : Directory already exists in {target_path}"
+                )
+
+            shutil.move(src=src_path, dst=target_path)
+            logger.info(f"Directory moved successfuly : {src_path} -> {target_path}")
         except Exception as e:
             raise e
