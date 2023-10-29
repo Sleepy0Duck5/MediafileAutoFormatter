@@ -26,11 +26,14 @@ class GeneralExecutor(Executor):
                 absolute_path=new_root_folder.get_absolute_path(),
             )
 
-            # TODO: Move original directory to src folder
-            # self._move_directory(
-            #     src_path=metadata.get_root().get_absolute_path(),
-            #     target_path=new_root_folder.get_absolute_path(),
-            # )
+            backup_path = os.path.join(
+                os.path.join(new_root_folder.get_absolute_path(), "MAF_Backup"),
+                metadata.get_root().get_title(),
+            )
+            self._move_directory(
+                src_path=metadata.get_root().get_absolute_path(),
+                target_path=backup_path,
+            )
 
             # TODO: Save log file at target directory
         except Exception as e:
@@ -68,6 +71,7 @@ class GeneralExecutor(Executor):
     def _move_file(self, file: RestructedFile) -> None:
         try:
             src_path = file.get_original_file().get_absolute_path()
+
             if not os.path.exists(src_path):
                 raise FileNotFoundError(
                     f"Move file failed : File not found in {src_path}"

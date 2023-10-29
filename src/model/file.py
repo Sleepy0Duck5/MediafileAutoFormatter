@@ -34,12 +34,18 @@ class File(Structable):
 
 
 class RestructedFile(File):
-    def __init__(self, absolute_path: str, original_file: File) -> None:
+    def __init__(
+        self, absolute_path: str, original_file: File, copied: bool = False
+    ) -> None:
         super().__init__(absolute_path, original_file.get_file_type())
         self._original_file = original_file
+        self._copied = copied
 
     def get_original_file(self) -> File:
         return self._original_file
 
     def rename(self, new_name: str) -> None:
         self._title = new_name
+
+    def is_copied(self) -> bool:
+        return self._copied

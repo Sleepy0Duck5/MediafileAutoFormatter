@@ -1,4 +1,6 @@
 import os
+import tempfile
+import shutil
 from abc import ABCMeta
 from loguru import logger
 from typing import List, Optional
@@ -62,7 +64,10 @@ class MovieRestructor(GeneralRestructor):
             subtitles=metadata.get_subtitles(),
             metadata=metadata,
         )
+
         self._restruct_mediafile(root_folder=new_root_folder, metadata=metadata)
+
+        self._create_restruct_log(root_folder=new_root_folder, metadata=metadata)
 
         return new_root_folder
 
@@ -100,11 +105,13 @@ class MovieRestructor(GeneralRestructor):
                 )
 
                 # TODO: Backup subtitle
-                # subtitle_backup = self._create_subtitle_backup_folder(
-                #     subtitle=subtitle_struct,
-                #     new_root_path=root_folder.get_absolute_path(),
-                # )
-                # root_folder.append_struct(subtitle_backup)
+                subtitle_backup_folder = self._subtitle_backup(
+                    original_subtitle=subtitle_struct,
+                    root_path=root_folder.get_absolute_path(),
+                )
+
+                root_folder.append_struct(subtitle_backup_folder)
+                return
 
     def _get_subtitle_file(
         self,
@@ -135,15 +142,40 @@ class MovieRestructor(GeneralRestructor):
 
         return None
 
-    def _create_subtitle_backup_folder(
-        self, subtitle: Structable, new_root_path: str
+    def _subtitle_backup(
+        self, original_subtitle: Structable, root_path: str
     ) -> RestructedFolder:
-        backup_path = os.path.join(new_root_path, "SubtitleBackup")
+        if isinstance(original_subtitle, File):
+            # Copy subtitle file
+            backup_file_name = original_subtitle.get_absolute_path().split(sep=os.sep)[
+                -1
+            ]
+            temp_copied_subtitle_path = os.path.join(
+                tempfile.gettempdir(),
+                backup_file_name,
+            )
+            shutil.copy2(
+                original_subtitle.get_absolute_path(), temp_copied_subtitle_path
+            )
 
-        subtitle_backup = RestructedFolder(absolute_path=backup_path)
-        subtitle_backup.append_struct(subtitle)
+            # Create backup folder
+            backup_path = os.path.join(root_path, "MAF_SubtitleBackup")
 
-        return subtitle_backup
+            backup_file = RestructedFile(
+                absolute_path=os.path.join(backup_path, backup_file_name),
+                original_file=File(
+                    absolute_path=temp_copied_subtitle_path,
+                    file_type=original_subtitle.get_file_type(),
+                ),
+            )
+
+            backup_folder = RestructedFolder(absolute_path=backup_path)
+            backup_folder.append_struct(backup_file)
+        else:
+            logger.warning("Subtitle folder backup not implemented")
+            raise NotImplemented
+
+        return backup_folder
 
     def _restruct_mediafile(
         self, root_folder: RestructedFolder, metadata: MovieMetadata
@@ -164,6 +196,29 @@ class MovieRestructor(GeneralRestructor):
             root_folder.append_struct(
                 struct=RestructedFile(absolute_path=new_path, original_file=file)
             )
+
+    def _create_restruct_log(
+        self, root_folder: RestructedFolder, metadata: MovieMetadata
+    ) -> None:
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            log_body = f"""Title : {metadata.get_title()}
+OriginalTitle : {metadata.get_original_title()}
+MediaType : {metadata.get_media_type()}
+MediaRoot : {metadata.get_media_root().get_absolute_path()}
+"""
+
+            temp_file.write(log_body.encode("utf-8"))
+            temp_file.flush()
+
+            log_path = os.path.join(root_folder.get_absolute_path(), "MAF_Restruct.log")
+            log = RestructedFile(
+                absolute_path=log_path,
+                original_file=File(
+                    absolute_path=temp_file.name, file_type=FileType.EXTRA
+                ),
+            )
+
+            root_folder.append_struct(log)
 
 
 class TVRestructor(GeneralRestructor):
