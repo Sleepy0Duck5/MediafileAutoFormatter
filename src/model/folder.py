@@ -45,11 +45,12 @@ class Folder(Structable):
             self.get_number_of_files_by_type(file_type=FileType.ARCHIVED_SUBTITLE) > 0
         )
 
+    def explain(self) -> str:
+        return f"[CREATED] {self.get_absolute_path()}"
+
 
 class RestructedFolder(Folder):
-    def __init__(
-        self, absolute_path: str, original_folder: Optional[Folder] = None
-    ) -> None:
+    def __init__(self, absolute_path: str, original_folder: Folder) -> None:
         super().__init__(absolute_path)
         self._original_folder = original_folder
 
@@ -58,3 +59,6 @@ class RestructedFolder(Folder):
 
     def get_original_folder(self) -> Optional[Folder]:
         return self._original_folder
+
+    def explain(self) -> str:
+        return f"[MOVED] {self._original_folder.get_absolute_path()} -> {self.get_absolute_path()}"

@@ -37,6 +37,13 @@ class Metadata(metaclass=ABCMeta):
     def get_media_root(self) -> Folder:
         return self._media_root
 
+    def explain(self) -> str:
+        return f"""Title : {self.get_title()}
+OriginalTitle : {self.get_original_title()}
+MediaType : {self.get_media_type()}
+MediaRoot : {self.get_media_root().get_absolute_path()}
+"""
+
 
 class SubtitleContainingMetadata(Metadata):
     def __init__(

@@ -39,21 +39,49 @@ class GeneralRestructor(Restructor):
         self._env_configs = env_configs
         self._formatter = formatter
         self._subtitle_extractor = subtitle_extractor
+        self._log = ""
 
-    def _create_new_root_folder(
-        self, metadata: Metadata, target_path: str
-    ) -> RestructedFolder:
+    def _create_new_root_folder(self, metadata: Metadata, target_path: str) -> Folder:
         root_folder_title = self._formatter._format_name(name=metadata.get_title())
 
         new_root_absoluth_path = os.path.join(target_path, root_folder_title)
 
-        return RestructedFolder(absolute_path=new_root_absoluth_path)
+        new_root_folder = Folder(absolute_path=new_root_absoluth_path)
+
+        self._append_restruct_log(new_root_folder)
+
+        return new_root_folder
+
+    def _create_restruct_log(self, root_folder: Folder) -> None:
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(self._log.encode("utf-8"))
+            temp_file.flush()
+
+            log_path = os.path.join(root_folder.get_absolute_path(), "MAF_Restruct.log")
+            log_file = RestructedFile(
+                absolute_path=log_path,
+                original_file=File(
+                    absolute_path=temp_file.name, file_type=FileType.EXTRA
+                ),
+            )
+
+            root_folder.append_struct(log_file)
+            return
+
+    def _append_restruct_log(self, struct: Structable):
+        self._log += struct.explain() + "\n"
+
+    def _append_struct_to_folder(self, folder: Folder, struct: Structable) -> None:
+        folder.append_struct(struct=struct)
+        self._append_restruct_log(struct=struct)
 
 
 class MovieRestructor(GeneralRestructor):
-    def restruct(self, metadata: MovieMetadata, target_path: str) -> RestructedFolder:
+    def restruct(self, metadata: MovieMetadata, target_path: str) -> Folder:
         if not os.path.exists(path=target_path):
             raise DirectoryNotFoundException
+
+        self._log += metadata.explain() + "\n"
 
         new_root_folder = self._create_new_root_folder(
             metadata=metadata, target_path=target_path
@@ -67,13 +95,13 @@ class MovieRestructor(GeneralRestructor):
 
         self._restruct_mediafile(root_folder=new_root_folder, metadata=metadata)
 
-        self._create_restruct_log(root_folder=new_root_folder, metadata=metadata)
+        self._create_restruct_log(root_folder=new_root_folder)
 
         return new_root_folder
 
     def _restruct_subtitle(
         self,
-        root_folder: RestructedFolder,
+        root_folder: Folder,
         subtitles: List[Structable],
         metadata: Metadata,
     ) -> None:
@@ -97,11 +125,13 @@ class MovieRestructor(GeneralRestructor):
                     root_folder.get_absolute_path(), new_file_name
                 )
 
-                root_folder.append_struct(
-                    RestructedFile(
-                        absolute_path=new_file_path,
-                        original_file=selected_subtitle_file,
-                    )
+                restructed_subtitle_file = RestructedFile(
+                    absolute_path=new_file_path,
+                    original_file=selected_subtitle_file,
+                )
+
+                self._append_struct_to_folder(
+                    folder=root_folder, struct=restructed_subtitle_file
                 )
 
                 # TODO: Backup subtitle
@@ -110,7 +140,9 @@ class MovieRestructor(GeneralRestructor):
                     root_path=root_folder.get_absolute_path(),
                 )
 
-                root_folder.append_struct(subtitle_backup_folder)
+                self._append_struct_to_folder(
+                    folder=root_folder, struct=subtitle_backup_folder
+                )
                 return
 
     def _get_subtitle_file(
@@ -142,9 +174,7 @@ class MovieRestructor(GeneralRestructor):
 
         return None
 
-    def _subtitle_backup(
-        self, original_subtitle: Structable, root_path: str
-    ) -> RestructedFolder:
+    def _subtitle_backup(self, original_subtitle: Structable, root_path: str) -> Folder:
         if isinstance(original_subtitle, File):
             # Copy subtitle file
             backup_file_name = original_subtitle.get_absolute_path().split(sep=os.sep)[
@@ -169,17 +199,15 @@ class MovieRestructor(GeneralRestructor):
                 ),
             )
 
-            backup_folder = RestructedFolder(absolute_path=backup_path)
-            backup_folder.append_struct(backup_file)
+            backup_folder = Folder(absolute_path=backup_path)
+            self._append_struct_to_folder(folder=backup_folder, struct=backup_file)
         else:
             logger.warning("Subtitle folder backup not implemented")
             raise NotImplemented
 
         return backup_folder
 
-    def _restruct_mediafile(
-        self, root_folder: RestructedFolder, metadata: MovieMetadata
-    ) -> None:
+    def _restruct_mediafile(self, root_folder: Folder, metadata: MovieMetadata) -> None:
         index = 1
 
         for file in metadata.get_media_files():
@@ -193,32 +221,13 @@ class MovieRestructor(GeneralRestructor):
             new_file_name = new_title + "." + file.get_extension()
             new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
 
-            root_folder.append_struct(
-                struct=RestructedFile(absolute_path=new_path, original_file=file)
+            restructed_media_file = RestructedFile(
+                absolute_path=new_path, original_file=file
             )
 
-    def _create_restruct_log(
-        self, root_folder: RestructedFolder, metadata: MovieMetadata
-    ) -> None:
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            log_body = f"""Title : {metadata.get_title()}
-OriginalTitle : {metadata.get_original_title()}
-MediaType : {metadata.get_media_type()}
-MediaRoot : {metadata.get_media_root().get_absolute_path()}
-"""
-
-            temp_file.write(log_body.encode("utf-8"))
-            temp_file.flush()
-
-            log_path = os.path.join(root_folder.get_absolute_path(), "MAF_Restruct.log")
-            log = RestructedFile(
-                absolute_path=log_path,
-                original_file=File(
-                    absolute_path=temp_file.name, file_type=FileType.EXTRA
-                ),
+            self._append_struct_to_folder(
+                folder=root_folder, struct=restructed_media_file
             )
-
-            root_folder.append_struct(log)
 
 
 class TVRestructor(GeneralRestructor):

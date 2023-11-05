@@ -32,6 +32,9 @@ class File(Structable):
     def get_file_type(self) -> FileType:
         return self._file_type
 
+    def explain(self) -> str:
+        return f"[CREATED] {self.get_absolute_path()}"
+
 
 class RestructedFile(File):
     def __init__(
@@ -49,3 +52,6 @@ class RestructedFile(File):
 
     def is_copied(self) -> bool:
         return self._copied
+
+    def explain(self) -> str:
+        return f"[MOVED] {self.get_original_file().get_absolute_path()} -> {self.get_absolute_path()}"

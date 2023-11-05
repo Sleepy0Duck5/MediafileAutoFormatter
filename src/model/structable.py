@@ -12,3 +12,6 @@ class Structable(metaclass=ABCMeta):
 
     def get_absolute_path(self) -> str:
         raise NotImplementedError
+
+    def explain(self) -> str:
+        return ""
