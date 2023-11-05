@@ -17,6 +17,7 @@ from src.analyzer.error import (
     MediaRootNotFoundException,
     EpisodeIndexNotFoundException,
     FileNamePatternNotFoundException,
+    EpisodeIndexDuplicatedException,
 )
 from src.constants import MediaType, FileType, SeasonAlias
 from src.env_configs import EnvConfigs
@@ -234,6 +235,9 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                 episode_index_not_found_files.append(media_file)
                 continue
 
+            if episodes.get(episode_index):
+                raise EpisodeIndexDuplicatedException("Duplicated episode index found")
+
             episodes[episode_index] = media_file
 
         return episodes
@@ -245,8 +249,12 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             title = media_file.get_title()
             splited_tokens = title.split(" ")
 
-            for token in splited_tokens:
+            idx = 0
+            for str_token in splited_tokens:
+                token = Token(idx, str_token)
                 self._update_saved_tokens(saved_tokens=saved_tokens, input_token=token)
+
+                idx += 1
 
         suffix_token_last_index = -1
         for idx in range(len(saved_tokens)):
@@ -264,15 +272,17 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
             return suffix
 
-        raise FileNamePatternNotFoundException(f"File name pattern not found.")
+        raise FileNamePatternNotFoundException(
+            f"Failed to found file suffix from file name"
+        )
 
-    def _update_saved_tokens(self, saved_tokens: List[Token], input_token: str):
+    def _update_saved_tokens(self, saved_tokens: List[Token], input_token: Token):
         for saved_token in saved_tokens:
-            if saved_token.get_str() == input_token:
+            if saved_token == input_token:
                 saved_token.count_up()
                 return
 
-        saved_tokens.append(Token(str=input_token))
+        saved_tokens.append(input_token)
 
     def _extract_episode_index_by_file_name(self, file_name: str, suffix: str) -> int:
         suffix_removed = file_name.replace(suffix, "")

@@ -18,5 +18,9 @@ class EpisodeIndexNotFoundException(AnalyzerException):
     pass
 
 
+class EpisodeIndexDuplicatedException(AnalyzerException):
+    pass
+
+
 class FileNamePatternNotFoundException(AnalyzerException):
     pass
