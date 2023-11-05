@@ -8,11 +8,18 @@ from typing import List, Optional
 from src.model.structable import Structable
 from src.model.file import File, RestructedFile
 from src.model.folder import Folder, RestructedFolder
-from src.model.metadata import Metadata, MovieMetadata
+from src.model.metadata import (
+    Metadata,
+    MovieMetadata,
+    TVMetadata,
+    SubtitleContainingMetadata,
+    SeasonMetadata,
+)
 from src.formatter.formatter import Formatter
 from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
 )
+from src.restructor.errors import SeasonNotFoundException
 from src.env_configs import EnvConfigs
 from src.errors import DirectoryNotFoundException
 from src.constants import FileType
@@ -41,6 +48,18 @@ class GeneralRestructor(Restructor):
         self._subtitle_extractor = subtitle_extractor
         self._log = ""
 
+    def restruct(self, metadata: Metadata, target_path: str) -> Folder:
+        if not os.path.exists(path=target_path):
+            raise DirectoryNotFoundException
+
+        self._log += metadata.explain() + "\n"
+
+        root_folder = self._create_new_root_folder(
+            metadata=metadata, target_path=target_path
+        )
+
+        return root_folder
+
     def _create_new_root_folder(self, metadata: Metadata, target_path: str) -> Folder:
         root_folder_title = self._formatter._format_name(name=metadata.get_title())
 
@@ -67,37 +86,6 @@ class GeneralRestructor(Restructor):
 
             root_folder.append_struct(log_file)
             return
-
-    def _append_restruct_log(self, struct: Structable):
-        self._log += struct.explain() + "\n"
-
-    def _append_struct_to_folder(self, folder: Folder, struct: Structable) -> None:
-        folder.append_struct(struct=struct)
-        self._append_restruct_log(struct=struct)
-
-
-class MovieRestructor(GeneralRestructor):
-    def restruct(self, metadata: MovieMetadata, target_path: str) -> Folder:
-        if not os.path.exists(path=target_path):
-            raise DirectoryNotFoundException
-
-        self._log += metadata.explain() + "\n"
-
-        new_root_folder = self._create_new_root_folder(
-            metadata=metadata, target_path=target_path
-        )
-
-        self._restruct_subtitle(
-            root_folder=new_root_folder,
-            subtitles=metadata.get_subtitles(),
-            metadata=metadata,
-        )
-
-        self._restruct_mediafile(root_folder=new_root_folder, metadata=metadata)
-
-        self._create_restruct_log(root_folder=new_root_folder)
-
-        return new_root_folder
 
     def _restruct_subtitle(
         self,
@@ -207,7 +195,9 @@ class MovieRestructor(GeneralRestructor):
 
         return backup_folder
 
-    def _restruct_mediafile(self, root_folder: Folder, metadata: MovieMetadata) -> None:
+    def _restruct_mediafile(
+        self, root_folder: Folder, metadata: SubtitleContainingMetadata
+    ) -> None:
         index = 1
 
         for file in metadata.get_media_files():
@@ -229,6 +219,71 @@ class MovieRestructor(GeneralRestructor):
                 folder=root_folder, struct=restructed_media_file
             )
 
+    def _append_restruct_log(self, struct: Structable):
+        self._log += struct.explain() + "\n"
+
+    def _append_struct_to_folder(self, folder: Folder, struct: Structable) -> None:
+        folder.append_struct(struct=struct)
+        self._append_restruct_log(struct=struct)
+
+
+class MovieRestructor(GeneralRestructor):
+    def restruct(self, metadata: MovieMetadata, target_path: str) -> Folder:
+        root_folder = super().restruct(metadata=metadata, target_path=target_path)
+
+        self._restruct_subtitle(
+            root_folder=root_folder,
+            subtitles=metadata.get_subtitles(),
+            metadata=metadata,
+        )
+
+        self._restruct_mediafile(root_folder=root_folder, metadata=metadata)
+
+        self._create_restruct_log(root_folder=root_folder)
+
+        return root_folder
+
 
 class TVRestructor(GeneralRestructor):
-    pass
+    def restruct(self, metadata: TVMetadata, target_path: str) -> Folder:
+        root_folder = super().restruct(metadata=metadata, target_path=target_path)
+
+        seasons = metadata.get_seasons()
+        if not seasons:
+            raise SeasonNotFoundException
+
+        for index in seasons:
+            season_metadata = seasons[index]
+
+            season_folder = self._create_season_folder(
+                root_folder=root_folder, season_metadata=season_metadata
+            )
+
+            self._restruct_subtitle(
+                root_folder=season_folder,
+                subtitles=season_metadata.get_subtitles(),
+                metadata=season_metadata,
+            )
+
+            self._restruct_mediafile(
+                root_folder=season_folder, metadata=season_metadata
+            )
+
+        self._create_restruct_log(root_folder=root_folder)
+
+        return root_folder
+
+    def _create_season_folder(
+        self, root_folder: Folder, season_metadata: SeasonMetadata
+    ) -> Folder:
+        season_folder_path = (
+            root_folder.get_absolute_path()
+            + os.sep
+            + "시즌 "
+            + str(season_metadata.get_season_index())
+        )
+        season_folder = Folder(absolute_path=season_folder_path)
+
+        self._append_struct_to_folder(folder=root_folder, struct=season_folder)
+
+        return season_folder

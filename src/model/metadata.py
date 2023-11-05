@@ -60,6 +60,9 @@ class SubtitleContainingMetadata(Metadata):
         self._media_files = media_files
         self._subtitles = subtitles
 
+    def get_media_files(self) -> List[File]:
+        return self._media_files
+
     def get_subtitles(self) -> List[Structable]:
         return self._subtitles
 
@@ -83,9 +86,6 @@ class MovieMetadata(SubtitleContainingMetadata):
             media_files,
             subtitles,
         )
-
-    def get_media_files(self) -> List[File]:
-        return self._media_files
 
 
 class SeasonMetadata(SubtitleContainingMetadata):
@@ -114,9 +114,6 @@ class SeasonMetadata(SubtitleContainingMetadata):
 
     def get_season_index(self) -> int:
         return self._season_index
-
-    def get_media_files(self) -> List[File]:
-        return self._media_files
 
 
 class TVMetadata(Metadata):
