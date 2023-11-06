@@ -8,6 +8,7 @@ from src.analyzer.media_analyzer_factory import MediaAnalyzerFactory
 from src.analyzer.metadata_reader import GenearlMetadataReader
 from src.restructor.restructor_factory import RestructorFactory
 from src.restructor.subtitle_extractor import GeneralSubtitleExtractor
+from src.log_exporter import LogExporter
 from src.executor.executor import GeneralExecutor
 from src.env_configs import EnvConfigs
 from src.constants import Log
@@ -33,6 +34,7 @@ if __name__ == "__main__":
     logger.info(f"target_path={args.target_path}")
 
     constructor = GeneralConstructor(env_configs=env_configs)
+    log_exporter = LogExporter()
 
     handler = Handler(
         constructor=constructor,
@@ -44,7 +46,8 @@ if __name__ == "__main__":
             env_configs=env_configs,
             subtitle_extractor=GeneralSubtitleExtractor(constrcutor=constructor),
         ),
-        executor=GeneralExecutor(),
+        executor=GeneralExecutor(log_exporter=log_exporter),
+        log_exporter=log_exporter,
     )
 
     handler.process(source_path=args.source_path, target_path=args.target_path)

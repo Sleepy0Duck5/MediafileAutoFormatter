@@ -3,42 +3,40 @@ import shutil
 from abc import ABCMeta
 from loguru import logger
 
-from src.model.folder import Folder, RestructedFolder
+from src.model.folder import RestructedFolder
 from src.model.file import RestructedFile
 from src.model.metadata import Metadata
 from src.executor.errors import FailedToCreateDirectoryException
 from src.errors import DirectoryNotFoundException
+from src.log_exporter import LogExporter
 
 
 class Executor(metaclass=ABCMeta):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, log_exporter: LogExporter) -> None:
+        raise NotImplementedError
 
     def execute(self, new_root_folder: RestructedFolder, metadata: Metadata) -> None:
-        pass
+        raise NotImplementedError
 
 
 class GeneralExecutor(Executor):
+    def __init__(self, log_exporter: LogExporter) -> None:
+        self._log_exporter = log_exporter
+
     def execute(self, new_root_folder: RestructedFolder, metadata: Metadata) -> None:
-        try:
-            self._execute(
-                folder=new_root_folder,
-                absolute_path=new_root_folder.get_absolute_path(),
-            )
+        self._execute(
+            folder=new_root_folder,
+            absolute_path=new_root_folder.get_absolute_path(),
+        )
 
-            backup_path = os.path.join(
-                os.path.join(new_root_folder.get_absolute_path(), "MAF_Backup"),
-                metadata.get_root().get_title(),
-            )
-            self._move_directory(
-                src_path=metadata.get_root().get_absolute_path(),
-                target_path=backup_path,
-            )
-
-            # TODO: Save log file at target directory
-        except Exception as e:
-            logger.error(e)
-            # TODO: Save log file at source directory
+        backup_path = os.path.join(
+            os.path.join(new_root_folder.get_absolute_path(), "MAF_Backup"),
+            metadata.get_root().get_title(),
+        )
+        self._move_directory(
+            src_path=metadata.get_root().get_absolute_path(),
+            target_path=backup_path,
+        )
 
     def _execute(self, folder: RestructedFolder, absolute_path: str) -> None:
         new_directory_path = self._create_directory(
@@ -64,7 +62,7 @@ class GeneralExecutor(Executor):
             )
 
         os.mkdir(new_directory_path)
-        logger.info(f"New directory created {new_directory_path}")
+        self._append_log(f"New directory created {new_directory_path}")
 
         return new_directory_path
 
@@ -84,7 +82,7 @@ class GeneralExecutor(Executor):
                 )
 
             os.rename(src_path, target_path)
-            logger.info(f"File moved successfuly : {src_path} -> {target_path}")
+            self._append_log(f"File moved successfuly : {src_path} -> {target_path}")
         except Exception as e:
             raise e
 
@@ -101,6 +99,12 @@ class GeneralExecutor(Executor):
                 )
 
             shutil.move(src=src_path, dst=target_path)
-            logger.info(f"Directory moved successfuly : {src_path} -> {target_path}")
+            self._append_log(
+                f"Directory moved successfuly : {src_path} -> {target_path}"
+            )
         except Exception as e:
             raise e
+
+    def _append_log(self, message: str):
+        logger.info(message)
+        self._log_exporter.append_log(message + "\n")
