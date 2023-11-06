@@ -12,3 +12,7 @@ class InvalidMediaTypeException(GeneralException):
 
 class InvalidMetadataTypeException(GeneralException):
     pass
+
+
+class InvalidEnvConfig(GeneralException):
+    pass
