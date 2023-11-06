@@ -16,6 +16,7 @@ from src.model.metadata import (
     SeasonMetadata,
 )
 from src.formatter.formatter import Formatter, TVFormatter
+from src.formatter.subtitle_converter import SubtitleConverter
 from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
 )
@@ -47,10 +48,12 @@ class GeneralRestructor(Restructor):
         env_configs: EnvConfigs,
         formatter: Formatter,
         subtitle_extractor: SubtitleExtractor,
+        subtitle_converter: SubtitleConverter,
     ) -> None:
         self._env_configs = env_configs
         self._formatter = formatter
         self._subtitle_extractor = subtitle_extractor
+        self._subtitle_converter = subtitle_converter
         self._log = ""
 
     def restruct(self, metadata: Metadata, target_path: str) -> Folder:
@@ -106,7 +109,46 @@ class GeneralRestructor(Restructor):
         subtitle_struct: Structable,
         metadata: Metadata,
     ) -> List[File]:
-        raise NotImplementedError
+        subtitle_files = []
+
+        if isinstance(subtitle_struct, File):
+            if subtitle_struct.get_file_type() == FileType.SUBTITLE:
+                subtitle_files = [subtitle_struct]
+            elif subtitle_struct.get_file_type() == FileType.ARCHIVED_SUBTITLE:
+                extracted_folder = self._subtitle_extractor.extract_archived_subtitle(
+                    subtitle=subtitle_struct, metadata=metadata
+                )
+                subtitle_files = self._get_subtitles_from_folder(
+                    folder=extracted_folder
+                )
+        elif isinstance(subtitle_struct, Folder):
+            subtitle_files = self._get_subtitles_from_folder(folder=subtitle_struct)
+
+        if len(subtitle_files) <= 0:
+            logger.warning("Subtitle found but nothing selected")
+            self._log += "[WARNING] Subtitle found but nothing selected"
+
+        return self._convert_subtitle(subtitle_files=subtitle_files)
+
+    def _convert_subtitle(self, subtitle_files: List[File]) -> List[File]:
+        result = []
+
+        for subtitle_file in subtitle_files:
+            if subtitle_file.get_extension() == "smi":  # TODO: Remove hardcoded
+                try:
+                    converted_files = self._subtitle_converter.convert_smi_to_srt(
+                        file=subtitle_file
+                    )
+                    result.extend(converted_files)
+                except Exception:
+                    logger.warning(
+                        f"Failed to convert subtitle : {subtitle_file.get_absolute_path()}"
+                    )
+                    result.append(subtitle_file)
+            else:
+                result.append(subtitle_file)
+
+        return result
 
     def _get_subtitles_from_folder(self, folder: Folder) -> List[File]:
         subtitles = []
@@ -213,28 +255,6 @@ class MovieRestructor(GeneralRestructor):
                 )
                 return
 
-    def _get_subtitle_files(
-        self,
-        subtitle_struct: Structable,
-        metadata: Metadata,
-    ) -> List[File]:
-        if isinstance(subtitle_struct, File):
-            if subtitle_struct.get_file_type() == FileType.SUBTITLE:
-                return [subtitle_struct]
-
-            if subtitle_struct.get_file_type() == FileType.ARCHIVED_SUBTITLE:
-                extracted_folder = self._subtitle_extractor.extract_archived_subtitle(
-                    subtitle=subtitle_struct, metadata=metadata
-                )
-                return self._get_subtitles_from_folder(folder=extracted_folder)
-
-        if isinstance(subtitle_struct, Folder):
-            return self._get_subtitles_from_folder(folder=subtitle_struct)
-
-        logger.warning("Subtitle found but nothing selected")
-        self._log += "[WARNING] Subtitle found but nothing selected"
-        return []
-
     def _rename_subtitle_and_append(
         self, root_folder: Folder, metadata: MovieMetadata, subtitle_files: List[File]
     ) -> None:
@@ -297,8 +317,9 @@ class TVRestructor(GeneralRestructor):
         formatter: TVFormatter,
         subtitle_extractor: SubtitleExtractor,
         subtitle_analyzer: TVAnalyzer,
+        subtitle_converter: SubtitleConverter,
     ) -> None:
-        super().__init__(env_configs, formatter, subtitle_extractor)
+        super().__init__(env_configs, formatter, subtitle_extractor, subtitle_converter)
         self._subtitle_analyzer = subtitle_analyzer
 
     def restruct(self, metadata: TVMetadata, target_path: str) -> Folder:
@@ -354,10 +375,13 @@ class TVRestructor(GeneralRestructor):
         if len(subtitles) <= 0:
             return
 
+        original_subtitle_files = []
+
         if len(subtitles) == 1:
             subtitle_files = self._get_subtitle_files(
                 subtitle_struct=subtitles[0], metadata=metadata
             )
+            original_subtitle_files.append(subtitles[0])
         else:
             if len(subtitles) != len(metadata.get_episode_files().keys()):
                 logger.warning("Subtitle file count is not same as episode files")
@@ -371,6 +395,7 @@ class TVRestructor(GeneralRestructor):
                 extracted_subtitle_files = self._get_subtitle_files(
                     subtitle_struct=subtitle, metadata=metadata
                 )
+                original_subtitle_files.append(subtitle)
                 subtitle_files.extend(extracted_subtitle_files)
 
                 if len(extracted_subtitle_files) >= 2:
@@ -387,31 +412,9 @@ class TVRestructor(GeneralRestructor):
             )
 
             self._subtitle_backup(
-                subtitle_files=[file for file in subtitle_files],
+                subtitle_files=[file for file in original_subtitle_files],
                 root_folder=root_folder,
             )
-
-    def _get_subtitle_files(
-        self,
-        subtitle_struct: Structable,
-        metadata: Metadata,
-    ) -> List[File]:
-        if isinstance(subtitle_struct, File):
-            if subtitle_struct.get_file_type() == FileType.SUBTITLE:
-                return [subtitle_struct]
-
-            if subtitle_struct.get_file_type() == FileType.ARCHIVED_SUBTITLE:
-                extracted_folder = self._subtitle_extractor.extract_archived_subtitle(
-                    subtitle=subtitle_struct, metadata=metadata
-                )
-                return self._get_subtitles_from_folder(folder=extracted_folder)
-
-            raise NotImplementedError
-
-        if isinstance(subtitle_struct, Folder):
-            return self._get_subtitles_from_folder(folder=subtitle_struct)
-
-        raise NotImplementedError
 
     def _rename_subtitle_and_append(
         self, root_folder: Folder, metadata: SeasonMetadata, subtitle_files: List[File]
