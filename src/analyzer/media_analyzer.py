@@ -195,7 +195,15 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         if not seasons:
             if media_root.get_number_of_files_by_type(FileType.MEDIA) <= 0:
-                raise MediaNotFoundException("TV media found but no seasons")
+                fallback_media_root_found = False
+                for folder in media_root.get_folders():
+                    if folder.get_number_of_files_by_type(file_type=FileType.MEDIA) > 0:
+                        fallback_media_root_found = True
+                        media_root = folder
+                        break
+
+                if not fallback_media_root_found:
+                    raise MediaNotFoundException("TV media found but no seasons")
 
             subtitles = self._analyze_subtitles(root=root)
             media_files = self._get_media_files(root=media_root)

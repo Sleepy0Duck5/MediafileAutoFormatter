@@ -1,22 +1,20 @@
 import os
+import random
+import tempfile
 from abc import ABCMeta
 from patoolib import extract_archive
-from loguru import logger
-from typing import List, Optional
-import tempfile
+from typing import List
 
 from src.model.structable import Structable
 from src.model.file import File
-from src.model.folder import Folder, RestructedFolder
+from src.model.folder import Folder
 from src.model.metadata import (
     Metadata,
     SubtitleContainingMetadata,
 )
 from src.constructor.constructor import Constructor
-from src.formatter.formatter import Formatter
-from src.env_configs import EnvConfigs
-from src.errors import InvalidMediaTypeException, InvalidMetadataTypeException
-from src.constants import FileType, Constants, MediaType
+from src.errors import InvalidMediaTypeException
+from src.constants import FileType
 
 
 class SubtitleExtractor(metaclass=ABCMeta):
@@ -38,9 +36,7 @@ class GeneralSubtitleExtractor(SubtitleExtractor):
         if subtitle.get_file_type() != FileType.ARCHIVED_SUBTITLE:
             raise InvalidMediaTypeException
 
-        temp_extracted_subtitle_path = tempfile.TemporaryDirectory(
-            suffix=metadata.get_title()
-        ).name
+        temp_extracted_subtitle_path = tempfile.mkdtemp()
 
         extract_archive(
             archive=subtitle.get_absolute_path(),

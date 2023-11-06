@@ -7,6 +7,7 @@ class Constants:
     MAXIMUM_ARCHIVE_SIZE = 30000000  # 30MB
     MAXIMUM_FOLDER_NAME_LENGTH = 250
     ERROR_LOG_FILENAME = "MAF_Error"
+    SUBTITLE_BACKUP_DIRECTORY_NAME = "MAF_SubtitleBackup"
 
 
 class Log:

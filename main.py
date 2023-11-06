@@ -55,5 +55,5 @@ if __name__ == "__main__":
     handler.process(
         source_path=args.source_path,
         target_path=args.target_path,
-        multiple=args.multiple,
+        multiple=args.multiple == "True",
     )

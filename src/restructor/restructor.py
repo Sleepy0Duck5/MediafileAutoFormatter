@@ -27,7 +27,7 @@ from src.restructor.errors import (
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.env_configs import EnvConfigs
 from src.errors import DirectoryNotFoundException
-from src.constants import FileType
+from src.constants import FileType, Constants
 
 
 class Restructor(metaclass=ABCMeta):
@@ -122,7 +122,7 @@ class GeneralRestructor(Restructor):
     ) -> None:
         # Create backup folder
         backup_path = os.path.join(
-            root_folder.get_absolute_path(), "MAF_SubtitleBackup"
+            root_folder.get_absolute_path(), Constants.SUBTITLE_BACKUP_DIRECTORY_NAME
         )
         backup_folder = Folder(absolute_path=backup_path)
 
@@ -130,8 +130,9 @@ class GeneralRestructor(Restructor):
             if isinstance(file, File):
                 # Copy subtitle file
                 backup_file_name = file.get_absolute_path().split(sep=os.sep)[-1]
+
                 temp_copied_subtitle_path = os.path.join(
-                    tempfile.gettempdir(),
+                    tempfile.mkdtemp(),
                     backup_file_name,
                 )
                 shutil.copy2(file.get_absolute_path(), temp_copied_subtitle_path)
