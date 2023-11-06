@@ -12,7 +12,7 @@ class Constants:
 
 class Log:
     LOG_FILE_NAME = "mediafile_auto_formatter.log"
-    LOG_FILE_ROTATION = "500 MB"
+    LOG_FILE_ROTATION = "50 MB"
 
 
 class Extensions:
