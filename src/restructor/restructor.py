@@ -117,38 +117,39 @@ class GeneralRestructor(Restructor):
 
         return subtitles
 
-    def _subtitle_backup(self, original_subtitle: Structable, root_path: str) -> Folder:
-        if isinstance(original_subtitle, File):
-            # Copy subtitle file
-            backup_file_name = original_subtitle.get_absolute_path().split(sep=os.sep)[
-                -1
-            ]
-            temp_copied_subtitle_path = os.path.join(
-                tempfile.gettempdir(),
-                backup_file_name,
-            )
-            shutil.copy2(
-                original_subtitle.get_absolute_path(), temp_copied_subtitle_path
-            )
+    def _subtitle_backup(
+        self, subtitle_files: List[Structable], root_folder: Folder
+    ) -> None:
+        # Create backup folder
+        backup_path = os.path.join(
+            root_folder.get_absolute_path(), "MAF_SubtitleBackup"
+        )
+        backup_folder = Folder(absolute_path=backup_path)
 
-            # Create backup folder
-            backup_path = os.path.join(root_path, "MAF_SubtitleBackup")
+        for file in subtitle_files:
+            if isinstance(file, File):
+                # Copy subtitle file
+                backup_file_name = file.get_absolute_path().split(sep=os.sep)[-1]
+                temp_copied_subtitle_path = os.path.join(
+                    tempfile.gettempdir(),
+                    backup_file_name,
+                )
+                shutil.copy2(file.get_absolute_path(), temp_copied_subtitle_path)
 
-            backup_file = RestructedFile(
-                absolute_path=os.path.join(backup_path, backup_file_name),
-                original_file=File(
-                    absolute_path=temp_copied_subtitle_path,
-                    file_type=original_subtitle.get_file_type(),
-                ),
-            )
+                backup_file = RestructedFile(
+                    absolute_path=os.path.join(backup_path, backup_file_name),
+                    original_file=File(
+                        absolute_path=temp_copied_subtitle_path,
+                        file_type=file.get_file_type(),
+                    ),
+                )
 
-            backup_folder = Folder(absolute_path=backup_path)
-            self._append_struct_to_folder(folder=backup_folder, struct=backup_file)
-        else:
-            logger.warning("Subtitle folder backup not implemented")
-            raise NotImplemented
+                self._append_struct_to_folder(folder=backup_folder, struct=backup_file)
+            else:
+                logger.warning("Subtitle folder backup not implemented")
+                raise NotImplemented
 
-        return backup_folder
+        self._append_struct_to_folder(folder=root_folder, struct=backup_folder)
 
     def _restruct_mediafile(
         self, root_folder: Folder, metadata: SubtitleContainingMetadata
@@ -205,14 +206,9 @@ class MovieRestructor(GeneralRestructor):
                     subtitle_files=subtitle_files,
                 )
 
-                # TODO: Backup subtitle
-                subtitle_backup_folder = self._subtitle_backup(
-                    original_subtitle=subtitle_struct,
-                    root_path=root_folder.get_absolute_path(),
-                )
-
-                self._append_struct_to_folder(
-                    folder=root_folder, struct=subtitle_backup_folder
+                self._subtitle_backup(
+                    subtitle_files=[subtitle_struct],
+                    root_folder=root_folder,
                 )
                 return
 
@@ -358,43 +354,40 @@ class TVRestructor(GeneralRestructor):
             return
 
         if len(subtitles) == 1:
-            subtitle_struct = subtitles[0]
-
             subtitle_files = self._get_subtitle_files(
-                subtitle_struct=subtitle_struct, metadata=metadata
+                subtitle_struct=subtitles[0], metadata=metadata
             )
-
-            if subtitle_files:
-                self._rename_subtitle_and_append(
-                    root_folder=root_folder,
-                    metadata=metadata,
-                    subtitle_files=subtitle_files,
+        else:
+            if len(subtitles) != len(metadata.get_episode_files().keys()):
+                logger.warning("Subtitle file count is not same as episode files")
+                self._log += (
+                    "[WARNING] Subtitle file count is not same as episode files"
                 )
-            return
 
-        if len(subtitles) != len(metadata.get_episode_files().keys()):
-            logger.warning("Subtitle file count is not same as episode files")
-            self._log += "[WARNING] Subtitle file count is not same as episode files"
+            subtitle_files = []
 
-        subtitle_files = []
-
-        for subtitle in subtitles:
-            extracted_subtitle_files = self._get_subtitle_files(
-                subtitle_struct=subtitle, metadata=metadata
-            )
-            subtitle_files.extend(extracted_subtitle_files)
-
-            if len(extracted_subtitle_files) >= 2:
-                logger.warning(
-                    "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated"
+            for subtitle in subtitles:
+                extracted_subtitle_files = self._get_subtitle_files(
+                    subtitle_struct=subtitle, metadata=metadata
                 )
-                self._log += "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated"
+                subtitle_files.extend(extracted_subtitle_files)
+
+                if len(extracted_subtitle_files) >= 2:
+                    logger.warning(
+                        "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated"
+                    )
+                    self._log += "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated"
 
         if subtitle_files:
             self._rename_subtitle_and_append(
                 root_folder=root_folder,
                 metadata=metadata,
                 subtitle_files=subtitle_files,
+            )
+
+            self._subtitle_backup(
+                subtitle_files=[file for file in subtitle_files],
+                root_folder=root_folder,
             )
 
     def _get_subtitle_files(

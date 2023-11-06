@@ -6,7 +6,6 @@ class Constants:
     UNKNOWN = "unknown"
     MAXIMUM_ARCHIVE_SIZE = 30000000  # 30MB
     MAXIMUM_FOLDER_NAME_LENGTH = 250
-    FILENAME_INDEX_ZFILL = 3
 
 
 class Log:

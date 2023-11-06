@@ -1,7 +1,7 @@
 from src.restructor.restructor import Restructor, MovieRestructor, TVRestructor
 from src.restructor.subtitle_extractor import SubtitleExtractor
 from src.analyzer.media_analyzer import TVAnalyzer
-from src.formatter.formatter import GeneralFormatter, TVFormatter
+from src.formatter.formatter import MovieFormatter, TVFormatter
 from src.constants import MediaType
 from src.errors import InvalidMediaTypeException
 from src.env_configs import EnvConfigs
@@ -18,7 +18,7 @@ class RestructorFactory:
         if media_type == MediaType.MOVIE:
             return MovieRestructor(
                 env_configs=self._env_configs,
-                formatter=GeneralFormatter(env_configs=self._env_configs),
+                formatter=MovieFormatter(env_configs=self._env_configs),
                 subtitle_extractor=self._subtitle_extractor,
             )
         elif media_type == MediaType.TV:
