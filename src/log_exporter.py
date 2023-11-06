@@ -11,13 +11,12 @@ class LogExporter:
 
     def export_traceback_as_file(self, source_path: str, target_path: str) -> None:
         try:
-            title = source_path.split(os.sep)[-1]
-            log_path = os.path.join(target_path, title)
+            log_path = source_path
 
             if not os.path.exists(log_path):
                 os.makedirs(log_path)
 
-            log_path = os.path.join(log_path, "MAF_Exception.log")
+            log_path = os.path.join(log_path, "MAF_Error.log")
 
             body = f"""Datetime : {datetime.datetime.now()}
 Source Path : {source_path}
