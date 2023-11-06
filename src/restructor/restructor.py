@@ -401,7 +401,7 @@ class TVRestructor(GeneralRestructor):
             extracted_subtitle_files = self._get_subtitle_files(
                 subtitle_struct=subtitle, metadata=metadata
             )
-            subtitle_files.append(extracted_subtitle_files)
+            subtitle_files.extend(extracted_subtitle_files)
 
             if len(extracted_subtitle_files) >= 2:
                 logger.warning(
