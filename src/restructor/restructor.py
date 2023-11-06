@@ -384,11 +384,12 @@ class TVRestructor(GeneralRestructor):
                 subtitle_struct=subtitle_struct, metadata=metadata
             )
 
-            self._rename_subtitle_and_append(
-                root_folder=root_folder,
-                metadata=metadata,
-                subtitle_files=subtitle_files,
-            )
+            if subtitle_files:
+                self._rename_subtitle_and_append(
+                    root_folder=root_folder,
+                    metadata=metadata,
+                    subtitle_files=subtitle_files,
+                )
             return
 
         if len(subtitles) != len(metadata.get_episode_files().keys()):
