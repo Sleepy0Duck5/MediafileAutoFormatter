@@ -12,6 +12,12 @@ class EnvConfigs:
         self._FILENAME_FORMAT = os.getenv(
             "FILENAME_FORMAT", DefaultEnvConifgs.FILENAME_FORMAT
         )
+        self._SEASON_NUMBER_DIGIT = int(
+            os.getenv("SEASON_NUMBER_DIGIT", DefaultEnvConifgs.SEASON_NUMBER_DIGIT)
+        )
+        self._EPISODE_NUMBER_DIGIT = int(
+            os.getenv("EPISODE_NUMBER_DIGIT", DefaultEnvConifgs.EPISODE_NUMBER_DIGIT)
+        )
         self._MEDIA_EXTENSIONS = json.loads(
             os.getenv("MEDIA_EXTENSIONS", DefaultEnvConifgs.MEDIA_EXTENSIONS),
         )

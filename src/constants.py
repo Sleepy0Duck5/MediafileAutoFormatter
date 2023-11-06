@@ -34,9 +34,9 @@ class FileType(Enum):
 
 
 class DefaultEnvConifgs:
-    FILENAME_FORMAT = (
-        "{{ title }} - S{{ season_number }}E{{ episode_number }} - {{ extras }}"
-    )
+    FILENAME_FORMAT = "{{ title }} - S{{ season_number }}E{{ episode_number }}"
+    SEASON_NUMBER_DIGIT = 2
+    EPISODE_NUMBER_DIGIT = 2
     MEDIA_EXTENSIONS = '["avi", "mp4", "mkv"]'
     SUBTITLE_SUFFIX = "ko"
     CONVERT_SUBTITLE_EXTENSION = False

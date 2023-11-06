@@ -115,6 +115,9 @@ class SeasonMetadata(SubtitleContainingMetadata):
     def get_season_index(self) -> int:
         return self._season_index
 
+    def get_episode_files(self) -> dict[int, File]:
+        return self._episode_files
+
 
 class TVMetadata(Metadata):
     def __init__(

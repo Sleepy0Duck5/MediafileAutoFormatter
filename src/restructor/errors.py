@@ -4,3 +4,11 @@ class RestructorException(Exception):
 
 class SeasonNotFoundException(RestructorException):
     pass
+
+
+class NoMeidaFileException(RestructorException):
+    pass
+
+
+class SubtitleIndexDuplicatedException(RestructorException):
+    pass

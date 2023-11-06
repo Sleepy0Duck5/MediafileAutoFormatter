@@ -216,7 +216,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         episode_index_not_found_files = []
 
-        file_name_suffix = self._get_file_name_suffix(media_files=media_files)
+        file_name_suffix = self._get_file_name_suffix(files=media_files)
 
         for media_file in media_files:
             file_title = media_file.get_title()
@@ -225,7 +225,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                 episode_index = self._extract_episode_index_by_file_name(
                     file_name=file_title, suffix=file_name_suffix
                 )
-            except EpisodeIndexNotFoundException as e:
+            except EpisodeIndexNotFoundException:
                 logger.info(f"Episode index not found from {file_title}")
                 episode_index_not_found_files.append(media_file)
                 continue
@@ -242,10 +242,10 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         return episodes
 
-    def _get_file_name_suffix(self, media_files: List[File]) -> str:
+    def _get_file_name_suffix(self, files: List[File]) -> str:
         saved_tokens: List[Token] = []
 
-        for media_file in media_files:
+        for media_file in files:
             title = media_file.get_title()
             splited_tokens = title.split(" ")
 

@@ -1,6 +1,7 @@
 import os
 import tempfile
 import shutil
+import re
 from abc import ABCMeta
 from loguru import logger
 from typing import List, Optional
@@ -19,7 +20,12 @@ from src.formatter.formatter import Formatter
 from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
 )
-from src.restructor.errors import SeasonNotFoundException
+from src.restructor.errors import (
+    SeasonNotFoundException,
+    NoMeidaFileException,
+    SubtitleIndexDuplicatedException,
+)
+from src.analyzer.media_analyzer import TVAnalyzer
 from src.env_configs import EnvConfigs
 from src.errors import DirectoryNotFoundException
 from src.constants import FileType
@@ -93,74 +99,23 @@ class GeneralRestructor(Restructor):
         subtitles: List[Structable],
         metadata: Metadata,
     ) -> None:
-        if len(subtitles) <= 0:
-            return
-
-        for subtitle_struct in subtitles:
-            selected_subtitle_file = self._get_subtitle_file(
-                subtitle=subtitle_struct, metadata=metadata
-            )
-
-            if selected_subtitle_file:
-                new_file_name = (
-                    metadata.get_title()
-                    + "."
-                    + self._env_configs._SUBTITLE_SUFFIX
-                    + "."
-                    + selected_subtitle_file.get_extension()
-                )
-                new_file_path = os.path.join(
-                    root_folder.get_absolute_path(), new_file_name
-                )
-
-                restructed_subtitle_file = RestructedFile(
-                    absolute_path=new_file_path,
-                    original_file=selected_subtitle_file,
-                )
-
-                self._append_struct_to_folder(
-                    folder=root_folder, struct=restructed_subtitle_file
-                )
-
-                # TODO: Backup subtitle
-                subtitle_backup_folder = self._subtitle_backup(
-                    original_subtitle=subtitle_struct,
-                    root_path=root_folder.get_absolute_path(),
-                )
-
-                self._append_struct_to_folder(
-                    folder=root_folder, struct=subtitle_backup_folder
-                )
-                return
-
-    def _get_subtitle_file(
-        self,
-        subtitle: Structable,
-        metadata: Metadata,
-    ) -> Optional[File]:
-        if isinstance(subtitle, File):
-            if subtitle.get_file_type() == FileType.SUBTITLE:
-                return subtitle
-
-            if subtitle.get_file_type() == FileType.ARCHIVED_SUBTITLE:
-                extracted_folder = self._subtitle_extractor.extract_archived_subtitle(
-                    subtitle=subtitle, metadata=metadata
-                )
-                return self._select_subtitle_from_folder(folder=extracted_folder)
-
-            raise NotImplementedError
-
-        if isinstance(subtitle, Folder):
-            return self._select_subtitle_from_folder(folder=subtitle)
-
         raise NotImplementedError
 
-    def _select_subtitle_from_folder(self, folder: Folder) -> Optional[File]:
+    def _get_subtitle_files(
+        self,
+        subtitle_struct: Structable,
+        metadata: Metadata,
+    ) -> List[File]:
+        raise NotImplementedError
+
+    def _get_subtitles_from_folder(self, folder: Folder) -> List[File]:
+        subtitles = []
+
         for subtitle in folder.get_files():
             if subtitle.get_file_type() == FileType.SUBTITLE:
-                return subtitle
+                subtitles.append(subtitle)
 
-        return None
+        return subtitles
 
     def _subtitle_backup(self, original_subtitle: Structable, root_path: str) -> Folder:
         if isinstance(original_subtitle, File):
@@ -226,6 +181,11 @@ class GeneralRestructor(Restructor):
         folder.append_struct(struct=struct)
         self._append_restruct_log(struct=struct)
 
+    def _rename_subtitle_and_append(
+        self, root_folder: Folder, metadata: Metadata, subtitle_files: List[File]
+    ) -> None:
+        raise NotImplementedError
+
 
 class MovieRestructor(GeneralRestructor):
     def restruct(self, metadata: MovieMetadata, target_path: str) -> Folder:
@@ -243,8 +203,108 @@ class MovieRestructor(GeneralRestructor):
 
         return root_folder
 
+    def _restruct_subtitle(
+        self,
+        root_folder: Folder,
+        subtitles: List[Structable],
+        metadata: MovieMetadata,
+    ) -> None:
+        if len(subtitles) <= 0:
+            return
+
+        for subtitle_struct in subtitles:
+            subtitle_files = self._get_subtitle_files(
+                subtitle_struct=subtitle_struct, metadata=metadata
+            )
+
+            if len(subtitle_files) >= 0:
+                self._rename_subtitle_and_append(
+                    root_folder=root_folder,
+                    metadata=metadata,
+                    subtitle_files=subtitle_files,
+                )
+
+                # TODO: Backup subtitle
+                subtitle_backup_folder = self._subtitle_backup(
+                    original_subtitle=subtitle_struct,
+                    root_path=root_folder.get_absolute_path(),
+                )
+
+                self._append_struct_to_folder(
+                    folder=root_folder, struct=subtitle_backup_folder
+                )
+                return
+
+    def _get_subtitle_files(
+        self,
+        subtitle_struct: Structable,
+        metadata: Metadata,
+    ) -> List[File]:
+        if isinstance(subtitle_struct, File):
+            if subtitle_struct.get_file_type() == FileType.SUBTITLE:
+                return [subtitle_struct]
+
+            if subtitle_struct.get_file_type() == FileType.ARCHIVED_SUBTITLE:
+                extracted_folder = self._subtitle_extractor.extract_archived_subtitle(
+                    subtitle=subtitle_struct, metadata=metadata
+                )
+                return self._get_subtitles_from_folder(folder=extracted_folder)
+
+        if isinstance(subtitle_struct, Folder):
+            return self._get_subtitles_from_folder(folder=subtitle_struct)
+
+        logger.warning("Subtitle found but nothing selected")
+        return []
+
+    def _rename_subtitle_and_append(
+        self, root_folder: Folder, metadata: MovieMetadata, subtitle_files: List[File]
+    ) -> None:
+        media_files = metadata.get_media_files()
+        if len(media_files) <= 0:
+            raise NoMeidaFileException
+
+        if len(subtitle_files) <= 0:
+            return
+
+        subtitle_file = subtitle_files[0]
+
+        new_file_name = self._rename_subtitle_file(
+            metadata=metadata, subtitle_file=subtitle_file
+        )
+
+        new_file_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
+
+        restructed_subtitle_file = RestructedFile(
+            absolute_path=new_file_path,
+            original_file=subtitle_file,
+        )
+
+        self._append_struct_to_folder(
+            folder=root_folder, struct=restructed_subtitle_file
+        )
+
+    def _rename_subtitle_file(self, metadata: Metadata, subtitle_file: File) -> str:
+        new_file_name = (
+            metadata.get_title()
+            + "."
+            + self._env_configs._SUBTITLE_SUFFIX
+            + "."
+            + subtitle_file.get_extension()
+        )
+        return new_file_name
+
 
 class TVRestructor(GeneralRestructor):
+    def __init__(
+        self,
+        env_configs: EnvConfigs,
+        formatter: Formatter,
+        subtitle_extractor: SubtitleExtractor,
+        subtitle_analyzer: TVAnalyzer,
+    ) -> None:
+        super().__init__(env_configs, formatter, subtitle_extractor)
+        self._subtitle_analyzer = subtitle_analyzer
+
     def restruct(self, metadata: TVMetadata, target_path: str) -> Folder:
         root_folder = super().restruct(metadata=metadata, target_path=target_path)
 
@@ -287,3 +347,152 @@ class TVRestructor(GeneralRestructor):
         self._append_struct_to_folder(folder=root_folder, struct=season_folder)
 
         return season_folder
+
+    def _restruct_subtitle(
+        self,
+        root_folder: Folder,
+        subtitles: List[Structable],
+        metadata: SeasonMetadata,
+    ) -> None:
+        if len(subtitles) <= 0:
+            return
+
+        if len(subtitles) == 1:
+            subtitle_struct = subtitles[0]
+
+            subtitle_files = self._get_subtitle_files(
+                subtitle_struct=subtitle_struct, metadata=metadata
+            )
+
+            self._rename_subtitle_and_append(
+                root_folder=root_folder,
+                metadata=metadata,
+                subtitle_files=subtitle_files,
+            )
+
+            return
+
+        # for subtitle_struct in subtitles:
+        #     subtitle_files = self._get_subtitle_files(
+        #         subtitle=subtitle_struct, metadata=metadata
+        #     )
+
+        #     if len(subtitle_files) >= 0:
+
+        #         # TODO: Backup subtitle
+        #         subtitle_backup_folder = self._subtitle_backup(
+        #             original_subtitle=subtitle_struct,
+        #             root_path=root_folder.get_absolute_path(),
+        #         )
+
+        #         self._append_struct_to_folder(
+        #             folder=root_folder, struct=subtitle_backup_folder
+        #         )
+        #         return
+
+    def _get_subtitle_files(
+        self,
+        subtitle_struct: Structable,
+        metadata: Metadata,
+    ) -> List[File]:
+        if isinstance(subtitle_struct, File):
+            if subtitle_struct.get_file_type() == FileType.SUBTITLE:
+                return [subtitle_struct]
+
+            if subtitle_struct.get_file_type() == FileType.ARCHIVED_SUBTITLE:
+                extracted_folder = self._subtitle_extractor.extract_archived_subtitle(
+                    subtitle=subtitle_struct, metadata=metadata
+                )
+                return self._get_subtitles_from_folder(folder=extracted_folder)
+
+            raise NotImplementedError
+
+        if isinstance(subtitle_struct, Folder):
+            return self._get_subtitles_from_folder(folder=subtitle_struct)
+
+        raise NotImplementedError
+
+    def _rename_subtitle_and_append(
+        self, root_folder: Folder, metadata: SeasonMetadata, subtitle_files: List[File]
+    ) -> None:
+        episodes = metadata.get_episode_files()
+        if len(episodes) <= 0:
+            raise NoMeidaFileException
+
+        subtitles_by_episode = self._organaize_subtitles_by_episode(
+            subtitle_files=subtitle_files
+        )
+
+        for episode_index in subtitles_by_episode.keys():
+            subtitle_file = subtitles_by_episode[episode_index]
+
+            new_file_name = self._rename_subtitle_file(
+                metadata=metadata,
+                subtitle_file=subtitle_file,
+                episode_index=episode_index,
+            )
+
+            new_file_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
+
+            restructed_subtitle_file = RestructedFile(
+                absolute_path=new_file_path,
+                original_file=subtitle_file,
+            )
+
+            self._append_struct_to_folder(
+                folder=root_folder, struct=restructed_subtitle_file
+            )
+
+    def _organaize_subtitles_by_episode(self, subtitle_files: List[File]):
+        subtitles_by_episode = {}
+
+        subtitle_files_suffix = self._subtitle_analyzer._get_file_name_suffix(
+            files=subtitle_files
+        )
+
+        for subtitle_file in subtitle_files:
+            episode_index = self._subtitle_analyzer._extract_episode_index_by_file_name(
+                file_name=subtitle_file.get_title(), suffix=subtitle_files_suffix
+            )
+
+            if subtitles_by_episode.get(episode_index):
+                raise SubtitleIndexDuplicatedException
+
+            subtitles_by_episode[episode_index] = subtitle_file
+
+        return subtitles_by_episode
+
+    def _rename_subtitle_file(
+        self, metadata: SeasonMetadata, subtitle_file: File, episode_index: int
+    ) -> str:
+        replace_strings = {
+            "title": metadata.get_title(),
+            "season_number": str(metadata.get_season_index()).zfill(
+                self._env_configs._SEASON_NUMBER_DIGIT
+            ),
+            "episode_number": str(episode_index).zfill(
+                self._env_configs._EPISODE_NUMBER_DIGIT
+            ),
+        }
+
+        new_file_name = ""
+        pattern = re.compile("{{\\s*\\w+\\s*}}")
+        cursor = 0
+
+        for iter in pattern.finditer(self._env_configs._FILENAME_FORMAT):
+            new_file_name += self._env_configs._FILENAME_FORMAT[cursor : iter.start()]
+
+            for replace_string in replace_strings:
+                if replace_string in iter.group():
+                    new_file_name += replace_strings.get(replace_string, "")
+                    break
+
+            cursor = iter.end()
+
+        new_file_name += (
+            "."
+            + self._env_configs._SUBTITLE_SUFFIX
+            + "."
+            + subtitle_file.get_extension()
+        )
+        return new_file_name
