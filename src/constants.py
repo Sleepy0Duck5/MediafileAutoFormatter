@@ -6,6 +6,7 @@ class Constants:
     UNKNOWN = "unknown"
     MAXIMUM_ARCHIVE_SIZE = 30000000  # 30MB
     MAXIMUM_FOLDER_NAME_LENGTH = 250
+    ERROR_LOG_FILENAME = "MAF_Error"
 
 
 class Log:
@@ -16,6 +17,7 @@ class Log:
 class Extensions:
     TXT = "txt"
     NFO = "nfo"
+    LOG = "log"
 
 
 class MediaType(Enum):

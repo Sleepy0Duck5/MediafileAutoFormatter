@@ -3,7 +3,7 @@ import tempfile
 import shutil
 from abc import ABCMeta
 from loguru import logger
-from typing import List, Optional
+from typing import List
 
 from src.model.structable import Structable
 from src.model.file import File, RestructedFile

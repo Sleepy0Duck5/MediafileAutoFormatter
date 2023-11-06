@@ -16,6 +16,15 @@ def _is_user_define_metadata_included(root: Folder) -> bool:
     return False
 
 
+def _is_error_log_included(root: Folder) -> bool:
+    for file in root.get_files():
+        if file.get_extension() == Extensions.LOG and (
+            file.get_title() == Constants.ERROR_LOG_FILENAME
+        ):
+            return True
+    return False
+
+
 class MediaTypeAnalyzer(metaclass=ABCMeta):
     def __init__(
         self, env_configs: EnvConfigs, metadata_reader: MetadataReader
@@ -31,6 +40,9 @@ class GeneralMediaTypeAnalyzer(MediaTypeAnalyzer):
     def analyze(self, root: Folder) -> MediaType:
         if _is_user_define_metadata_included(root=root):
             raise NotImplementedError("User define metadata not work yet.")
+
+        if _is_error_log_included(root=root):
+            raise NotImplementedError("Error log file already exists! Aborting...")
 
         return self._analyze_media_type(root=root)
 

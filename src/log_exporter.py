@@ -4,6 +4,8 @@ import datetime
 
 from loguru import logger
 
+from src.constants import Constants, Extensions
+
 
 class LogExporter:
     def __init__(self) -> None:
@@ -16,7 +18,9 @@ class LogExporter:
             if not os.path.exists(log_path):
                 os.makedirs(log_path)
 
-            log_path = os.path.join(log_path, "MAF_Error.log")
+            log_path = os.path.join(
+                log_path, f"{Constants.ERROR_LOG_FILENAME}.{Extensions.LOG}"
+            )
 
             body = f"""Datetime : {datetime.datetime.now()}
 Source Path : {source_path}
