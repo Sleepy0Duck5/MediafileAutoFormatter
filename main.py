@@ -19,6 +19,7 @@ def _init_parser() -> argparse.ArgumentParser:
 
     parser.add_argument("source_path", type=str)
     parser.add_argument("--target_path", type=str, default="", required=False)
+    parser.add_argument("--multiple", type=str, default=False, required=False)
 
     return parser
 
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     logger.info("Mediafile auto formatter start")
     logger.info(f"source_path={args.source_path}")
     logger.info(f"target_path={args.target_path}")
+    logger.info(f"multiple={args.multiple}")
 
     constructor = GeneralConstructor(env_configs=env_configs)
     log_exporter = LogExporter()
@@ -50,4 +52,8 @@ if __name__ == "__main__":
         log_exporter=log_exporter,
     )
 
-    handler.process(source_path=args.source_path, target_path=args.target_path)
+    handler.process(
+        source_path=args.source_path,
+        target_path=args.target_path,
+        multiple=args.multiple,
+    )

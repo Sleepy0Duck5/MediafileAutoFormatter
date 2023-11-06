@@ -28,6 +28,8 @@ Traceback : \n{traceback.format_exc()}
                 file.write(body)
                 file.flush()
 
+            self._log = ""
+
         except Exception as e:
             logger.opt(exception=e).error("Failed to export error log file")
 

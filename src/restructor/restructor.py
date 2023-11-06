@@ -90,6 +90,7 @@ class GeneralRestructor(Restructor):
             )
 
             root_folder.append_struct(log_file)
+            self._log = ""
             return
 
     def _restruct_subtitle(
