@@ -41,9 +41,6 @@ class DefaultEnvConifgs:
     CONVERT_SUBTITLE_EXTENSION = False
     SUBTITLE_EXTENSIONS = '["smi", "ass"]'
     FALLBACK_SUBTITLE_EXTENSION = "srt"
-    FILE_WATCH = False
-    FILE_WATCH_SOURCE_PATH = "/"
-    FILE_WATCH_TARGET_PATH = "/"
 
 
 class SeasonAlias:

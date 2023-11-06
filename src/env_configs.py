@@ -37,13 +37,6 @@ class EnvConfigs:
         self._FALLBACK_SUBTITLE_EXTENSION = os.getenv(
             "FALLBACK_SUBTITLE_EXTENSION", DefaultEnvConifgs.FALLBACK_SUBTITLE_EXTENSION
         )
-        self._FILE_WATCH = bool(os.getenv("FILE_WATCH", DefaultEnvConifgs.FILE_WATCH))
-        self._FILE_WATCH_SOURCE_PATH = os.getenv(
-            "FILE_WATCH_SOURCE_PATH", DefaultEnvConifgs.FILE_WATCH_SOURCE_PATH
-        )
-        self._FILE_WATCH_TARGET_PATH = os.getenv(
-            "FILE_WATCH_TARGET_PATH", DefaultEnvConifgs.FILE_WATCH_TARGET_PATH
-        )
 
         self._validation()
 
