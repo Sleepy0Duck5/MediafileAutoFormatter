@@ -242,6 +242,7 @@ class MovieRestructor(GeneralRestructor):
             return self._get_subtitles_from_folder(folder=subtitle_struct)
 
         logger.warning("Subtitle found but nothing selected")
+        self._log += "[WARNING] Subtitle found but nothing selected"
         return []
 
     def _rename_subtitle_and_append(
@@ -388,28 +389,32 @@ class TVRestructor(GeneralRestructor):
                 metadata=metadata,
                 subtitle_files=subtitle_files,
             )
-
             return
 
-        raise NotImplementedError
+        if len(subtitles) != len(metadata.get_episode_files().keys()):
+            logger.warning("Subtitle file count is not same as episode files")
+            self._log += "[WARNING] Subtitle file count is not same as episode files"
 
-        # for subtitle_struct in subtitles:
-        #     subtitle_files = self._get_subtitle_files(
-        #         subtitle=subtitle_struct, metadata=metadata
-        #     )
+        subtitle_files = []
 
-        #     if len(subtitle_files) >= 0:
+        for subtitle in subtitles:
+            extracted_subtitle_files = self._get_subtitle_files(
+                subtitle_struct=subtitle, metadata=metadata
+            )
+            subtitle_files.append(extracted_subtitle_files)
 
-        #         # TODO: Backup subtitle
-        #         subtitle_backup_folder = self._subtitle_backup(
-        #             original_subtitle=subtitle_struct,
-        #             root_path=root_folder.get_absolute_path(),
-        #         )
+            if len(extracted_subtitle_files) >= 2:
+                logger.warning(
+                    "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated"
+                )
+                self._log += "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated"
 
-        #         self._append_struct_to_folder(
-        #             folder=root_folder, struct=subtitle_backup_folder
-        #         )
-        #         return
+        if subtitle_files:
+            self._rename_subtitle_and_append(
+                root_folder=root_folder,
+                metadata=metadata,
+                subtitle_files=subtitle_files,
+            )
 
     def _get_subtitle_files(
         self,

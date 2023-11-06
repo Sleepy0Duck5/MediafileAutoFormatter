@@ -120,7 +120,7 @@ class SeasonMetadata(SubtitleContainingMetadata):
         return self._episode_files
 
     def explain(self) -> str:
-        return """<Season>
+        return f"""<Season>
 SeasonIndex : {self._season_index}
 Episodes : {len(self._episode_files.keys())}
 """
