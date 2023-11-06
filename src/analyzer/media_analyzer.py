@@ -70,6 +70,10 @@ class GeneralMediaAnalyzer(MediaAnalyzer):
             if file.get_file_type() == FileType.MEDIA:
                 media_files.append(file)
 
+        if not media_files:
+            for child in root.get_folders():
+                media_files.extend(self._get_media_files(child))
+
         return media_files
 
     # TODO: folder 내에 여러 자막이 있는 경우, 여러 파일 설정 필요
@@ -170,18 +174,18 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         folders.sort(key=lambda struct: struct.get_title())
 
         season_index = 1
-        for folder in media_root.get_folders():
-            season_title = folder.get_title()
+        for season_folder in media_root.get_folders():
+            season_title = season_folder.get_title()
 
             if contains_season_suffix(str=season_title):
-                subtitles = self._analyze_subtitles(root=folder)
-                media_files = self._get_media_files(root=media_root)
+                subtitles = self._analyze_subtitles(root=season_folder)
+                media_files = self._get_media_files(root=season_folder)
 
                 seasons[season_index] = SeasonMetadata(
                     title=builder.get_title(),
                     original_title=season_title,
                     root=media_root,
-                    media_root=folder,
+                    media_root=season_folder,
                     media_files=media_files,
                     subtitles=subtitles,
                     season_index=season_index,
