@@ -153,26 +153,7 @@ class GeneralRestructor(Restructor):
     def _restruct_mediafile(
         self, root_folder: Folder, metadata: SubtitleContainingMetadata
     ) -> None:
-        index = 1
-
-        for file in metadata.get_media_files():
-            new_title = metadata.get_title()
-
-            # Add index if multiple movie file exists
-            if len(metadata.get_media_files()) > 1:
-                new_title = f"{new_title}({index})"
-                index += 1
-
-            new_file_name = new_title + "." + file.get_extension()
-            new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
-
-            restructed_media_file = RestructedFile(
-                absolute_path=new_path, original_file=file
-            )
-
-            self._append_struct_to_folder(
-                folder=root_folder, struct=restructed_media_file
-            )
+        raise NotImplementedError
 
     def _append_restruct_log(self, struct: Structable):
         self._log += struct.explain() + "\n"
@@ -180,6 +161,13 @@ class GeneralRestructor(Restructor):
     def _append_struct_to_folder(self, folder: Folder, struct: Structable) -> None:
         folder.append_struct(struct=struct)
         self._append_restruct_log(struct=struct)
+
+    def _rename_file(
+        self,
+        metadata: Metadata,
+        file: File,
+    ) -> str:
+        raise NotImplementedError
 
     def _rename_subtitle_and_append(
         self, root_folder: Folder, metadata: Metadata, subtitle_files: List[File]
@@ -283,6 +271,9 @@ class MovieRestructor(GeneralRestructor):
             folder=root_folder, struct=restructed_subtitle_file
         )
 
+    def _rename_file(self, metadata: SubtitleContainingMetadata, file: File) -> str:
+        return metadata.get_title()
+
     def _rename_subtitle_file(self, metadata: Metadata, subtitle_file: File) -> str:
         new_file_name = (
             metadata.get_title()
@@ -292,6 +283,33 @@ class MovieRestructor(GeneralRestructor):
             + subtitle_file.get_extension()
         )
         return new_file_name
+
+    def _restruct_mediafile(
+        self, root_folder: Folder, metadata: SubtitleContainingMetadata
+    ) -> None:
+        media_file_names = {}
+
+        for file in metadata.get_media_files():
+            new_title = self._rename_file(metadata=metadata, file=file)
+            new_file_name = f"{new_title}.{file.get_extension()}"
+
+            # Add index to file name if same media file name exists
+            if not media_file_names.get(new_file_name):
+                media_file_names[new_file_name] = 0
+            else:
+                index = media_file_names.get(new_file_name)
+                media_file_names[new_file_name] += 1
+                new_file_name = f"{new_title}({index}).{file.get_extension()}"
+
+            new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
+
+            restructed_media_file = RestructedFile(
+                absolute_path=new_path, original_file=file
+            )
+
+            self._append_struct_to_folder(
+                folder=root_folder, struct=restructed_media_file
+            )
 
 
 class TVRestructor(GeneralRestructor):
@@ -372,6 +390,8 @@ class TVRestructor(GeneralRestructor):
 
             return
 
+        raise NotImplementedError
+
         # for subtitle_struct in subtitles:
         #     subtitle_files = self._get_subtitle_files(
         #         subtitle=subtitle_struct, metadata=metadata
@@ -426,9 +446,9 @@ class TVRestructor(GeneralRestructor):
         for episode_index in subtitles_by_episode.keys():
             subtitle_file = subtitles_by_episode[episode_index]
 
-            new_file_name = self._rename_subtitle_file(
+            new_file_name = self._rename_file(
                 metadata=metadata,
-                subtitle_file=subtitle_file,
+                file=subtitle_file,
                 episode_index=episode_index,
             )
 
@@ -462,8 +482,8 @@ class TVRestructor(GeneralRestructor):
 
         return subtitles_by_episode
 
-    def _rename_subtitle_file(
-        self, metadata: SeasonMetadata, subtitle_file: File, episode_index: int
+    def _rename_file(
+        self, metadata: SeasonMetadata, file: File, episode_index: int
     ) -> str:
         replace_strings = {
             "title": metadata.get_title(),
@@ -490,9 +510,38 @@ class TVRestructor(GeneralRestructor):
             cursor = iter.end()
 
         new_file_name += (
-            "."
-            + self._env_configs._SUBTITLE_SUFFIX
-            + "."
-            + subtitle_file.get_extension()
+            "." + self._env_configs._SUBTITLE_SUFFIX + "." + file.get_extension()
         )
         return new_file_name
+
+    def _restruct_mediafile(
+        self, root_folder: Folder, metadata: SeasonMetadata
+    ) -> None:
+        media_file_names = {}
+
+        episode_files = metadata.get_episode_files()
+        for episode_index in episode_files.keys():
+            file = episode_files[episode_index]
+
+            new_title = self._rename_file(
+                metadata=metadata, file=file, episode_index=episode_index
+            )
+            new_file_name = f"{new_title}.{file.get_extension()}"
+
+            # Add index to file name if same media file name exists
+            if not media_file_names.get(new_file_name):
+                media_file_names[new_file_name] = 0
+            else:
+                index = media_file_names.get(new_file_name)
+                media_file_names[new_file_name] += 1
+                new_file_name = f"{new_title}({index}).{file.get_extension()}"
+
+            new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
+
+            restructed_media_file = RestructedFile(
+                absolute_path=new_path, original_file=file
+            )
+
+            self._append_struct_to_folder(
+                folder=root_folder, struct=restructed_media_file
+            )
