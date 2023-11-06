@@ -1,7 +1,6 @@
 import os
 import tempfile
 import shutil
-import re
 from abc import ABCMeta
 from loguru import logger
 from typing import List, Optional

@@ -1,3 +1,6 @@
+import os
+import traceback
+
 from loguru import logger
 
 from src.constructor.constructor import Constructor
@@ -40,3 +43,25 @@ class Handler:
 
         except Exception as e:
             logger.opt(exception=e).error(e)
+            self._export_log_as_file(source_path=source_path, target_path=target_path)
+
+    def _export_log_as_file(self, source_path: str, target_path: str) -> None:
+        try:
+            title = source_path.split(os.sep)[-1]
+            log_path = os.path.join(target_path, title)
+
+            if not os.path.exists(log_path):
+                os.makedirs(log_path)
+
+            log_path = os.path.join(log_path, "MAF_Exception.log")
+
+            body = f"""Source Path : {source_path}
+Target Path : {target_path}
+Traceback : \n{traceback.format_exc()}"""
+
+            with open(log_path, "w+") as file:
+                file.write(body)
+                file.flush()
+
+        except Exception as e:
+            logger.opt(exception=e).error("Failed to export error log file")
