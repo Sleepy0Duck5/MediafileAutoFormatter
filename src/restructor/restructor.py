@@ -332,6 +332,7 @@ class TVRestructor(GeneralRestructor):
 
         for index in seasons:
             season_metadata = seasons[index]
+            self._log += "\n" + season_metadata.explain() + "\n"
 
             season_folder = self._create_season_folder(
                 root_folder=root_folder, season_metadata=season_metadata
@@ -446,11 +447,12 @@ class TVRestructor(GeneralRestructor):
         for episode_index in subtitles_by_episode.keys():
             subtitle_file = subtitles_by_episode[episode_index]
 
-            new_file_name = self._rename_file(
+            new_title = self._rename_file(
                 metadata=metadata,
                 file=subtitle_file,
                 episode_index=episode_index,
             )
+            new_file_name = f"{new_title}.{subtitle_file.get_extension()}"
 
             new_file_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
 
@@ -509,9 +511,9 @@ class TVRestructor(GeneralRestructor):
 
             cursor = iter.end()
 
-        new_file_name += (
-            "." + self._env_configs._SUBTITLE_SUFFIX + "." + file.get_extension()
-        )
+        if file.get_file_type() == FileType.SUBTITLE:
+            new_file_name += "." + self._env_configs._SUBTITLE_SUFFIX
+
         return new_file_name
 
     def _restruct_mediafile(

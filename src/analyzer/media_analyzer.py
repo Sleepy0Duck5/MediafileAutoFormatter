@@ -294,4 +294,10 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             if str_index.isnumeric():
                 return int(str_index)
 
+            # try to split episode
+            splited_episode = str_index.split("E")
+            if len(splited_episode) >= 2:
+                if splited_episode[1].isnumeric():
+                    return int(splited_episode[1])
+
         raise EpisodeIndexNotFoundException

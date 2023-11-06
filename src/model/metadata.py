@@ -38,7 +38,8 @@ class Metadata(metaclass=ABCMeta):
         return self._media_root
 
     def explain(self) -> str:
-        return f"""Title : {self.get_title()}
+        return f"""<Metadata>
+Title : {self.get_title()}
 OriginalTitle : {self.get_original_title()}
 MediaType : {self.get_media_type()}
 MediaRoot : {self.get_media_root().get_absolute_path()}
@@ -117,6 +118,12 @@ class SeasonMetadata(SubtitleContainingMetadata):
 
     def get_episode_files(self) -> dict[int, File]:
         return self._episode_files
+
+    def explain(self) -> str:
+        return """<Season>
+SeasonIndex : {self._season_index}
+Episodes : {len(self._episode_files.keys())}
+"""
 
 
 class TVMetadata(Metadata):
