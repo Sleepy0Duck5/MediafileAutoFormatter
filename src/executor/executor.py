@@ -81,7 +81,7 @@ class GeneralExecutor(Executor):
                     f"Move file failed : File already exists in {target_path}"
                 )
 
-            os.rename(src_path, target_path)
+            shutil.move(src_path, target_path)
             self._append_log(f"File moved successfuly : {src_path} -> {target_path}")
         except Exception as e:
             raise e
