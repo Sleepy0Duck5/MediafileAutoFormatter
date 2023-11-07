@@ -17,9 +17,12 @@ from src.env_configs import EnvConfigs
 def trunc_suffix_from_file_name(file_name: str) -> str:
     splited = file_name.split(".")
 
+    if len(splited) <= 1:
+        return file_name
+
     suffix = splited[-1]
 
-    if len(suffix) == 2:
+    if len(suffix) == 2 and re.compile("[^0-9]+").match(suffix):
         return file_name[:-3]
     return file_name
 

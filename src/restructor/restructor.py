@@ -79,7 +79,7 @@ class GeneralRestructor(Restructor):
 
         return new_root_folder
 
-    def _create_restruct_log(self, root_folder: Folder) -> None:
+    def _export_restruct_log(self, root_folder: Folder) -> None:
         temp_file = tempfile.NamedTemporaryFile(delete=False)
         temp_file.write(self._log.encode("utf-8"))
         temp_file.flush()
@@ -236,7 +236,7 @@ class MovieRestructor(GeneralRestructor):
 
         self._restruct_mediafile(root_folder=root_folder, metadata=metadata)
 
-        self._create_restruct_log(root_folder=root_folder)
+        self._export_restruct_log(root_folder=root_folder)
 
         return root_folder
 
@@ -363,7 +363,7 @@ class TVRestructor(GeneralRestructor):
                 root_folder=season_folder, metadata=season_metadata
             )
 
-        self._create_restruct_log(root_folder=root_folder)
+        self._export_restruct_log(root_folder=root_folder)
 
         return root_folder
 

@@ -31,14 +31,17 @@ def contains_season_keyword(str: str) -> bool:
     return (SeasonAlias.KOR_1 in str) or (SeasonAlias.ENG_1 in str.lower())
 
 
-def extract_season_index(folder_name: str) -> Optional[int]:
-    if not contains_season_keyword(str=folder_name):
-        return None
-
-    str_index = re.sub(r"[^0-9]", "", folder_name)
+def _extract_number_from_string(str: str) -> Optional[int]:
+    str_index = re.sub(r"[^0-9]", "", str)
     if str_index.isnumeric():
         return int(str_index)
     return None
+
+
+def extract_season_index(folder_name: str) -> Optional[int]:
+    if not contains_season_keyword(str=folder_name):
+        return None
+    return _extract_number_from_string(str=folder_name)
 
 
 class MediaAnalyzer(metaclass=ABCMeta):
@@ -308,9 +311,9 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
             return prefix
 
-        raise FileNamePatternNotFoundException(
-            f"Failed to found file prefix from file name"
-        )
+        # if each file's token counts is one, then try to extract number
+        logger.warning(f"Failed to found file prefix from file name")
+        return ""
 
     def _update_saved_tokens(self, saved_tokens: List[Token], input_token: Token):
         for saved_token in saved_tokens:
@@ -332,10 +335,15 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             if str_index.isnumeric():
                 return int(str_index)
 
-            # try to split episode
+            # try to split by episode spliter
             splited_episode = str_index.split("E")
             if len(splited_episode) >= 2:
                 if splited_episode[1].isnumeric():
                     return int(splited_episode[1])
+
+            # try to remain number only
+            index = _extract_number_from_string(str=str_index)
+            if index:
+                return index
 
         raise EpisodeIndexNotFoundException
