@@ -28,7 +28,7 @@ from src.restructor.errors import (
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.env_configs import EnvConfigs
 from src.errors import DirectoryNotFoundException
-from src.constants import FileType, Constants, Extensions
+from src.constants import FileType, Constants, Extensions, SeasonAlias
 
 
 class Restructor(metaclass=ABCMeta):
@@ -363,7 +363,7 @@ class TVRestructor(GeneralRestructor):
         season_folder_path = (
             root_folder.get_absolute_path()
             + os.sep
-            + "시즌 "
+            + f"{SeasonAlias.KOR_1} "
             + str(season_metadata.get_season_index())
         )
         season_folder = Folder(absolute_path=season_folder_path)
