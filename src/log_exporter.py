@@ -32,6 +32,13 @@ Traceback : \n{traceback.format_exc()}
                 file.write(body)
                 file.flush()
 
+            try:
+                os.chmod(file.name, 755)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to grant permission 755 to {file.name}, error : {str(e)}"
+                )
+
             self._log = ""
 
         except Exception as e:
