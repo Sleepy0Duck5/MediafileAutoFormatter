@@ -24,3 +24,7 @@ class EpisodeIndexDuplicatedException(AnalyzerException):
 
 class FileNamePatternNotFoundException(AnalyzerException):
     pass
+
+
+class SeasonIndexNotFoundException(AnalyzerException):
+    pass

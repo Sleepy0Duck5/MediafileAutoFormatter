@@ -1,5 +1,6 @@
+import re
 from abc import ABCMeta
-from typing import List
+from typing import List, Optional
 from loguru import logger
 
 from src.model.file import File
@@ -19,14 +20,25 @@ from src.analyzer.error import (
     EpisodeIndexNotFoundException,
     FileNamePatternNotFoundException,
     EpisodeIndexDuplicatedException,
+    SeasonIndexNotFoundException,
 )
 from src.constants import MediaType, FileType, SeasonAlias
 from src.env_configs import EnvConfigs
 
 
-# TODO: 하드코딩 제거, regex 적용 필요
+# TODO: regex 적용 필요
 def contains_season_keyword(str: str) -> bool:
     return (SeasonAlias.KOR_1 in str) or (SeasonAlias.ENG_1 in str.lower())
+
+
+def extract_season_index(folder_name: str) -> Optional[int]:
+    if not contains_season_keyword(str=folder_name):
+        return None
+
+    str_index = re.sub(r"[^0-9]", "", folder_name)
+    if str_index.isnumeric():
+        return int(str_index)
+    return None
 
 
 class MediaAnalyzer(metaclass=ABCMeta):
@@ -174,26 +186,32 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         folders = media_root.get_structs()
         folders.sort(key=lambda struct: struct.get_title())
 
-        season_index = 1
         for season_folder in media_root.get_folders():
             season_title = season_folder.get_title()
+            season_index = extract_season_index(folder_name=season_title)
 
-            if contains_season_keyword(str=season_title):
-                subtitles = self._analyze_subtitles(root=season_folder)
-                media_files = self._get_media_files(root=season_folder)
+            if not season_index:
+                if len(media_root.get_folders()) > 1:
+                    raise SeasonIndexNotFoundException(
+                        "Failed to detect season index from season folder name, but multiple season folder exists. Try to rename season foler name."
+                    )
+                season_index = 1
 
-                seasons[season_index] = SeasonMetadata(
-                    title=builder.get_title(),
-                    original_title=season_title,
-                    root=media_root,
-                    media_root=season_folder,
-                    media_files=media_files,
-                    subtitles=subtitles,
-                    season_index=season_index,
-                    episode_files=self._get_episodes(media_files),
-                )
-                season_index += 1
+            subtitles = self._analyze_subtitles(root=season_folder)
+            media_files = self._get_media_files(root=season_folder)
 
+            seasons[season_index] = SeasonMetadata(
+                title=builder.get_title(),
+                original_title=season_title,
+                root=media_root,
+                media_root=season_folder,
+                media_files=media_files,
+                subtitles=subtitles,
+                season_index=season_index,
+                episode_files=self._get_episodes(media_files),
+            )
+
+        # season folder not detected, then media root is unique season folder
         if not seasons:
             if media_root.get_number_of_files_by_type(FileType.MEDIA) <= 0:
                 fallback_media_root_found = False
@@ -208,6 +226,11 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
             subtitles = self._analyze_subtitles(root=root)
             media_files = self._get_media_files(root=media_root)
+
+            # try to extract season index, if none then set as first season
+            season_index = extract_season_index(folder_name=media_root.get_title())
+            if not season_index:
+                season_index = 1
 
             seasons[season_index] = SeasonMetadata(
                 title=builder.get_title(),
