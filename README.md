@@ -7,6 +7,7 @@
 (False라면 source_path가 단일 미디어라고 취급함)
 
 ```
+# Create .env file before run
 python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_PATH"
 ```
 
