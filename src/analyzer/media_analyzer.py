@@ -18,7 +18,6 @@ from src.analyzer.error import (
     MediaNotFoundException,
     MediaRootNotFoundException,
     EpisodeIndexNotFoundException,
-    FileNamePatternNotFoundException,
     EpisodeIndexDuplicatedException,
     SeasonIndexNotFoundException,
 )
@@ -32,9 +31,11 @@ def contains_season_keyword(str: str) -> bool:
 
 
 def _extract_number_from_string(str: str) -> Optional[int]:
-    str_index = re.sub(r"[^0-9]", "", str)
-    if str_index.isnumeric():
-        return int(str_index)
+    for i in re.finditer(r"[0-9]+", str):
+        str_index = i.group()
+        if str_index.isnumeric():
+            return int(str_index)
+
     return None
 
 
