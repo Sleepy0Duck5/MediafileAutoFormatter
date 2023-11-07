@@ -92,6 +92,13 @@ class GeneralRestructor(Restructor):
                 ),
             )
 
+            try:
+                os.chmod(temp_file.name, 755)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to grant permission 755 to {temp_file.name}, error : {str(e)}"
+                )
+
             root_folder.append_struct(log_file)
             self._log = ""
             return
