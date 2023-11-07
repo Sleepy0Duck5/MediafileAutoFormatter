@@ -7,8 +7,65 @@
 (False라면 source_path가 단일 미디어라고 취급함)
 
 ```
-# Create .env file before run
+# install requirements
+python -m pip install -r .\requirements.txt
+
+# create .env file before run
 python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_PATH"
+```
+
+
+## Formating example
+
+### TV Example 1
+```
+# Before
+─ Some title(media folder)
+    └ Some media file 1.mp4
+    └ Some media file 1.srt
+    └ Some media file 2.mp4
+    └ Some media file 2.srt
+    └ Some media file 3.mp4
+    └ Some media file 3.srt
+
+# After
+─ Some title(media folder)
+    └ Season 1
+        └ Some title - S01E01.mp4
+        └ Some title - S01E01.ko.srt
+        └ Some title - S01E02.mp4
+        └ Some title - S01E02.ko.srt
+        └ Some title - S01E03.mp4
+        └ Some title - S01E03.ko.srt
+```
+
+### TV Example 2 : Multiple season
+```
+# Before
+─ Some title(media folder)
+    └ Season 1
+        └ Some media file 1.mp4
+        └ Some media file 1.srt
+        └ Some media file 2.mp4
+        └ Some media file 2.srt
+    └ Season 2
+        └ Some media file 3.mp4
+        └ Some media file 3.srt
+        └ Some media file 4.mp4
+        └ Some media file 4.srt
+
+# After
+─ Some title(media folder)
+    └ Season 1
+        └ Some title - S01E01.mp4
+        └ Some title - S01E01.ko.srt
+        └ Some title - S01E02.mp4
+        └ Some title - S01E02.ko.srt
+    └ Season 2
+        └ Some title - S01E03.mp4
+        └ Some title - S01E03.ko.srt
+        └ Some title - S01E04.mp4
+        └ Some title - S01E04.ko.srt
 ```
 
 ## Directory structure
@@ -59,60 +116,6 @@ python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_P
         └ subtitle.zip or subtitle folder
 ```
 
-
-## Formating example
-
-### TV Example 1
-```
-# Before
-─ Some title(root folder)
-    └ Some media file 1.mp4
-    └ Some media file 1.srt
-    └ Some media file 2.mp4
-    └ Some media file 2.srt
-    └ Some media file 3.mp4
-    └ Some media file 3.srt
-
-# After
-─ Some title(root folder)
-    └ Season 1
-        └ Some title - S01E01.mp4
-        └ Some title - S01E01.ko.srt
-        └ Some title - S01E02.mp4
-        └ Some title - S01E02.ko.srt
-        └ Some title - S01E03.mp4
-        └ Some title - S01E03.ko.srt
-```
-
-### TV Example 2 : Multiple season
-```
-# Before
-─ Some title(root folder)
-    └ Season 1
-        └ Some media file 1.mp4
-        └ Some media file 1.srt
-        └ Some media file 2.mp4
-        └ Some media file 2.srt
-    └ Season 2
-        └ Some media file 3.mp4
-        └ Some media file 3.srt
-        └ Some media file 4.mp4
-        └ Some media file 4.srt
-
-# After
-─ Some title(root folder)
-    └ Season 1
-        └ Some title - S01E01.mp4
-        └ Some title - S01E01.ko.srt
-        └ Some title - S01E02.mp4
-        └ Some title - S01E02.ko.srt
-    └ Season 2
-        └ Some title - S01E03.mp4
-        └ Some title - S01E03.ko.srt
-        └ Some title - S01E04.mp4
-        └ Some title - S01E04.ko.srt
-```
-
 ## Metadata (WIP)
 미디어 파일의 루트 디렉토리에 metadata.txt 파일을 두어 원하는 형태로 포매팅 할 수 있습니다.
 
@@ -124,12 +127,8 @@ python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_P
 }
 ```
 
-## Requirements
-
-```
-python -m pip install -r .\requirements.txt
-```
-
 ## TODO
 1. 원하는 형태로 파일 및 디렉토리 이름 포매팅
 2. 제목을 TheMovieDB와 비교해서 정확도 향상
+3. 버그 픽스
+4. prefix, suffix 추출 알고리즘 개선
