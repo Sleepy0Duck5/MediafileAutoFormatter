@@ -32,11 +32,12 @@ def _print_args(args) -> None:
 
 
 if __name__ == "__main__":
-    logger.add(Log.LOG_FILE_NAME, rotation=Log.LOG_FILE_ROTATION)
-
     args = _init_parser().parse_args()
 
     env_configs = EnvConfigs()
+
+    if env_configs._EXPORT_DEBUG_LOG_FILE:
+        logger.add(Log.LOG_FILE_NAME, rotation=Log.LOG_FILE_ROTATION)
 
     _print_args(args)
 

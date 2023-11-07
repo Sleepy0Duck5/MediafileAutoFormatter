@@ -35,6 +35,13 @@ class EnvConfigs:
         self._SUBTITLE_EXTENSIONS = json.loads(
             os.getenv("SUBTITLE_EXTENSIONS", DefaultEnvConifgs.SUBTITLE_EXTENSIONS)
         )
+        self._EXPORT_DEBUG_LOG_FILE = (
+            os.getenv(
+                "EXPORT_DEBUG_LOG_FILE",
+                DefaultEnvConifgs.EXPORT_DEBUG_LOG_FILE,
+            )
+            == "True"
+        )
 
         self._validation()
 

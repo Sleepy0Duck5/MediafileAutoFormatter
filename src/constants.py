@@ -44,6 +44,7 @@ class DefaultEnvConifgs:
     SUBTITLE_SUFFIX = "ko"
     CONVERT_SMI_TO_SRT = True
     SUBTITLE_EXTENSIONS = '["smi", "ass"]'
+    EXPORT_DEBUG_LOG_FILE = False
 
 
 class SeasonAlias:
