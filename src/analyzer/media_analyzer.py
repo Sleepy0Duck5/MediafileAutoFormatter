@@ -259,8 +259,8 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         saved_tokens: List[Token] = []
 
         for media_file in files:
-            title = media_file.get_title()
-            splited_tokens = title.split(" ")
+            underscore_replaced = media_file.get_title().replace("_", " ")
+            splited_tokens = underscore_replaced.split(" ")
 
             idx = 0
             for str_token in splited_tokens:
@@ -298,7 +298,8 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         saved_tokens.append(input_token)
 
     def _extract_episode_index_by_file_name(self, file_name: str, prefix: str) -> int:
-        suffix_removed = trunc_suffix_from_file_name(file_name=file_name)
+        underscore_replaced = file_name.replace("_", " ")
+        suffix_removed = trunc_suffix_from_file_name(file_name=underscore_replaced)
         prefix_removed = suffix_removed.replace(prefix, "")
         splited = prefix_removed.split(" ")
 
