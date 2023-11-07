@@ -1,22 +1,38 @@
 # MediafileAutoFormatter
 파일 및 디렉토리 이름을 원하는 형태로 포매팅합니다.
 
+- source_path : 원본 변환할 미디어 파일이 들어있는 디렉토리 경로
+- target_path : 변환된 파일 및 디렉토리가 저장될 경로
+- multiple : source_path 내 서로 다른 모든 미디어를 변환하고자 하는 경우 True로 설정
+(False라면 source_path가 단일 미디어라고 취급함)
+
+```
+python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_PATH"
+```
+
 ## Directory structure
 
 ### Movie & TV
 ```
-─ media root folder
-    └ media files
-    └ subtitle.zip or subtitle folder
-
-─ media root folder
-    └ media folder
+# Set multiple option to True
+─ source folder (= source_path)
+    └ media folder 1
         └ media files
         └ subtitle.zip or subtitle folder
 
-─ media root folder
-    └ media folder
-        └ media files
+    └ media folder 2
+        └ folder
+            └ media files
+            └ subtitle.zip or subtitle folder
+
+    └ media folder 3
+        └ folder
+            └ media files
+        └ subtitle.zip or subtitle folder
+
+# Set multiple option to False
+- media folder 1 (= source_path)
+    └ media files
     └ subtitle.zip or subtitle folder
 ```
 
@@ -40,6 +56,60 @@
         └ media folder
             └ media files
         └ subtitle.zip or subtitle folder
+```
+
+
+### Formating example
+
+#### TV Example 1
+```
+# Before
+─ Some title(root folder)
+    └ Some media file 1.mp4
+    └ Some media file 1.srt
+    └ Some media file 2.mp4
+    └ Some media file 2.srt
+    └ Some media file 3.mp4
+    └ Some media file 3.srt
+
+# After
+─ Some title(root folder)
+    └ Season 1
+        └ Some title - S01E01.mp4
+        └ Some title - S01E01.ko.srt
+        └ Some title - S01E02.mp4
+        └ Some title - S01E02.ko.srt
+        └ Some title - S01E03.mp4
+        └ Some title - S01E03.ko.srt
+```
+
+#### TV Example 2 : Multiple season
+```
+# Before
+─ Some title(root folder)
+    └ Season 1
+        └ Some media file 1.mp4
+        └ Some media file 1.srt
+        └ Some media file 2.mp4
+        └ Some media file 2.srt
+    └ Season 2
+        └ Some media file 3.mp4
+        └ Some media file 3.srt
+        └ Some media file 4.mp4
+        └ Some media file 4.srt
+
+# After
+─ Some title(root folder)
+    └ Season 1
+        └ Some title - S01E01.mp4
+        └ Some title - S01E01.ko.srt
+        └ Some title - S01E02.mp4
+        └ Some title - S01E02.ko.srt
+    └ Season 2
+        └ Some title - S01E03.mp4
+        └ Some title - S01E03.ko.srt
+        └ Some title - S01E04.mp4
+        └ Some title - S01E04.ko.srt
 ```
 
 ## Metadata (WIP)
