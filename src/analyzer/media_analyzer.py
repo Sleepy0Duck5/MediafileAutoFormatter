@@ -12,6 +12,7 @@ from src.analyzer.metadata_builder import (
     MovieMetadataBuilder,
     TVMetadataBuilder,
 )
+from src.formatter.subtitle_converter import trunc_suffix_from_file_name
 from src.analyzer.error import (
     MediaNotFoundException,
     MediaRootNotFoundException,
@@ -24,7 +25,7 @@ from src.env_configs import EnvConfigs
 
 
 # TODO: 하드코딩 제거, regex 적용 필요
-def contains_season_suffix(str: str) -> bool:
+def contains_season_keyword(str: str) -> bool:
     return (SeasonAlias.KOR_1 in str) or (SeasonAlias.ENG_1 in str.lower())
 
 
@@ -156,7 +157,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         for folder in root.get_folders():
             if folder.get_number_of_files_by_type(file_type=FileType.MEDIA) > 0 or (
-                contains_season_suffix(folder.get_title())
+                contains_season_keyword(folder.get_title())
             ):
                 media_contained_folder.append(folder)
 
@@ -177,7 +178,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         for season_folder in media_root.get_folders():
             season_title = season_folder.get_title()
 
-            if contains_season_suffix(str=season_title):
+            if contains_season_keyword(str=season_title):
                 subtitles = self._analyze_subtitles(root=season_folder)
                 media_files = self._get_media_files(root=season_folder)
 
@@ -228,14 +229,14 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         episode_index_not_found_files = []
 
-        file_name_suffix = self._get_file_name_suffix(files=media_files)
+        file_name_prefix = self._get_file_name_prefix(files=media_files)
 
         for media_file in media_files:
             file_title = media_file.get_title()
 
             try:
                 episode_index = self._extract_episode_index_by_file_name(
-                    file_name=file_title, suffix=file_name_suffix
+                    file_name=file_title, prefix=file_name_prefix
                 )
             except EpisodeIndexNotFoundException:
                 logger.info(f"Episode index not found from {file_title}")
@@ -254,7 +255,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         return episodes
 
-    def _get_file_name_suffix(self, files: List[File]) -> str:
+    def _get_file_name_prefix(self, files: List[File]) -> str:
         saved_tokens: List[Token] = []
 
         for media_file in files:
@@ -268,24 +269,24 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
                 idx += 1
 
-        suffix_token_last_index = -1
+        prefix_token_last_index = -1
         for idx in range(len(saved_tokens)):
             if saved_tokens[idx].get_count() <= 1:
-                suffix_token_last_index = idx - 1
+                prefix_token_last_index = idx - 1
                 break
 
-        if suffix_token_last_index >= 0:
-            suffix = ""
+        if prefix_token_last_index >= 0:
+            prefix = ""
 
             for idx in range(len(saved_tokens)):
-                if idx > suffix_token_last_index:
+                if idx > prefix_token_last_index:
                     break
-                suffix += saved_tokens[idx].get_str() + " "
+                prefix += saved_tokens[idx].get_str() + " "
 
-            return suffix
+            return prefix
 
         raise FileNamePatternNotFoundException(
-            f"Failed to found file suffix from file name"
+            f"Failed to found file prefix from file name"
         )
 
     def _update_saved_tokens(self, saved_tokens: List[Token], input_token: Token):
@@ -296,9 +297,10 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         saved_tokens.append(input_token)
 
-    def _extract_episode_index_by_file_name(self, file_name: str, suffix: str) -> int:
-        suffix_removed = file_name.replace(suffix, "")
-        splited = suffix_removed.split(" ")
+    def _extract_episode_index_by_file_name(self, file_name: str, prefix: str) -> int:
+        suffix_removed = trunc_suffix_from_file_name(file_name=file_name)
+        prefix_removed = suffix_removed.replace(prefix, "")
+        splited = prefix_removed.split(" ")
 
         if len(splited) > 0:
             str_index = splited[0]

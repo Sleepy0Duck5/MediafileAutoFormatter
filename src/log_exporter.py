@@ -28,7 +28,10 @@ Target Path : {target_path}
 Traceback : \n{traceback.format_exc()}
 """
 
-            with open(log_path, "a+", ) as file:
+            with open(
+                log_path,
+                "a+",
+            ) as file:
                 file.write(body)
                 file.flush()
 

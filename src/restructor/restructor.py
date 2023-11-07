@@ -471,13 +471,13 @@ class TVRestructor(GeneralRestructor):
     def _organaize_subtitles_by_episode(self, subtitle_files: List[File]):
         subtitles_by_episode = {}
 
-        subtitle_files_suffix = self._subtitle_analyzer._get_file_name_suffix(
+        subtitle_files_prefix = self._subtitle_analyzer._get_file_name_prefix(
             files=subtitle_files
         )
 
         for subtitle_file in subtitle_files:
             episode_index = self._subtitle_analyzer._extract_episode_index_by_file_name(
-                file_name=subtitle_file.get_title(), suffix=subtitle_files_suffix
+                file_name=subtitle_file.get_title(), prefix=subtitle_files_prefix
             )
 
             if subtitles_by_episode.get(episode_index):

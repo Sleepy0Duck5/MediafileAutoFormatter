@@ -14,6 +14,16 @@ from src.env_configs import EnvConfigs
 # License of this code inherits the original repo's license. (g6123, ncianeo)
 
 
+def trunc_suffix_from_file_name(file_name: str) -> str:
+    splited = file_name.split(".")
+
+    suffix = splited[-1]
+
+    if len(suffix) == 2:
+        return file_name[:-3]
+    return file_name
+
+
 class SubtitleConverter(metaclass=ABCMeta):
     def __init__(self, env_configs: EnvConfigs) -> None:
         self._env_configs = env_configs
@@ -49,7 +59,9 @@ class GeneralSubtitleConverter(SubtitleConverter):
                 else lang_code[:2].lower() + "_" + lang_code[2:].upper()
             )
 
-            converted_file_name = file.get_title() + lang_suffix + ".srt"
+            file_name = trunc_suffix_from_file_name(file_name=file.get_title())
+
+            converted_file_name = file_name + lang_suffix + ".srt"
             converted_file_path = os.path.join(tempfile.mkdtemp(), converted_file_name)
 
             with codecs.open(
