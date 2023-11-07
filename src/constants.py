@@ -43,9 +43,9 @@ class DefaultEnvConifgs:
     EPISODE_NUMBER_DIGIT = 2
     MEDIA_EXTENSIONS = '["avi", "mp4", "mkv"]'
     SUBTITLE_SUFFIX = "ko"
-    CONVERT_SMI_TO_SRT = True
+    CONVERT_SMI_TO_SRT = "True"
     SUBTITLE_EXTENSIONS = '["smi", "ass"]'
-    EXPORT_DEBUG_LOG_FILE = False
+    EXPORT_DEBUG_LOG_FILE = "False"
 
 
 class SeasonAlias:
