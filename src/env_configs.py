@@ -25,17 +25,15 @@ class EnvConfigs:
         self._SUBTITLE_SUFFIX = os.getenv(
             "SUBTITLE_SUFFIX", DefaultEnvConifgs.SUBTITLE_SUFFIX
         )
-        self._CONVERT_SUBTITLE_EXTENSION = bool(
+        self._CONVERT_SMI_TO_SRT = (
             os.getenv(
-                "CONVERT_SUBTITLE_EXTENSION",
-                DefaultEnvConifgs.CONVERT_SUBTITLE_EXTENSION,
+                "CONVERT_SMI_TO_SRT",
+                DefaultEnvConifgs.CONVERT_SMI_TO_SRT,
             )
+            == "True"
         )
         self._SUBTITLE_EXTENSIONS = json.loads(
             os.getenv("SUBTITLE_EXTENSIONS", DefaultEnvConifgs.SUBTITLE_EXTENSIONS)
-        )
-        self._FALLBACK_SUBTITLE_EXTENSION = os.getenv(
-            "FALLBACK_SUBTITLE_EXTENSION", DefaultEnvConifgs.FALLBACK_SUBTITLE_EXTENSION
         )
 
         self._validation()

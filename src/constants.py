@@ -19,6 +19,7 @@ class Extensions:
     TXT = "txt"
     NFO = "nfo"
     LOG = "log"
+    SMI = "smi"
 
 
 class MediaType(Enum):
@@ -41,9 +42,8 @@ class DefaultEnvConifgs:
     EPISODE_NUMBER_DIGIT = 2
     MEDIA_EXTENSIONS = '["avi", "mp4", "mkv"]'
     SUBTITLE_SUFFIX = "ko"
-    CONVERT_SUBTITLE_EXTENSION = False
+    CONVERT_SMI_TO_SRT = True
     SUBTITLE_EXTENSIONS = '["smi", "ass"]'
-    FALLBACK_SUBTITLE_EXTENSION = "srt"
 
 
 class SeasonAlias:

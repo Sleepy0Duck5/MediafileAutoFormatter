@@ -28,7 +28,7 @@ from src.restructor.errors import (
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.env_configs import EnvConfigs
 from src.errors import DirectoryNotFoundException
-from src.constants import FileType, Constants
+from src.constants import FileType, Constants, Extensions
 
 
 class Restructor(metaclass=ABCMeta):
@@ -131,10 +131,13 @@ class GeneralRestructor(Restructor):
         return self._convert_subtitle(subtitle_files=subtitle_files)
 
     def _convert_subtitle(self, subtitle_files: List[File]) -> List[File]:
+        if not self._env_configs._CONVERT_SMI_TO_SRT:
+            return subtitle_files
+
         result = []
 
         for subtitle_file in subtitle_files:
-            if subtitle_file.get_extension() == "smi":  # TODO: Remove hardcoded
+            if subtitle_file.get_extension() == Extensions.SMI:
                 try:
                     converted_files = self._subtitle_converter.convert_smi_to_srt(
                         file=subtitle_file
