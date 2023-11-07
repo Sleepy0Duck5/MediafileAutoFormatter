@@ -32,10 +32,16 @@ class Handler:
     ) -> None:
         try:
             if not os.path.exists(source_path):
-                raise DirectoryNotFoundException
+                raise DirectoryNotFoundException(
+                    f"Source directory not found : {source_path}"
+                )
+            if not os.path.exists(target_path):
+                raise DirectoryNotFoundException(
+                    f"Target directory not found : {target_path}"
+                )
 
             if not multiple:
-                self._process(source_path=source_path, target_path=target_path)
+                self._process_media(source_path=source_path, target_path=target_path)
                 return
 
             childs = next(os.walk(source_path))
@@ -43,7 +49,7 @@ class Handler:
 
             for child_name in child_directories:
                 child_path = os.path.join(source_path, child_name)
-                self._process(source_path=child_path, target_path=target_path)
+                self._process_media(source_path=child_path, target_path=target_path)
 
         except Exception as e:
             logger.opt(exception=e).error(e)
@@ -51,7 +57,7 @@ class Handler:
                 source_path=source_path, target_path=target_path
             )
 
-    def _process(self, source_path: str, target_path: str) -> None:
+    def _process_media(self, source_path: str, target_path: str) -> None:
         try:
             root_folder = self._constructor.struct(source_path=source_path)
 

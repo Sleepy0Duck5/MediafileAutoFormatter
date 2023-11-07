@@ -18,22 +18,27 @@ def _init_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("source_path", type=str)
-    parser.add_argument("--target_path", type=str, default="", required=False)
+    parser.add_argument("--target_path", type=str, default="", required=True)
     parser.add_argument("--multiple", type=str, default=False, required=False)
 
     return parser
 
 
-if __name__ == "__main__":
-    args = _init_parser().parse_args()
-
-    env_configs = EnvConfigs()
-
-    logger.add(Log.LOG_FILE_NAME, rotation=Log.LOG_FILE_ROTATION)
+def _print_args(args) -> None:
     logger.info("Mediafile auto formatter start")
     logger.info(f"source_path={args.source_path}")
     logger.info(f"target_path={args.target_path}")
     logger.info(f"multiple={args.multiple}")
+
+
+if __name__ == "__main__":
+    logger.add(Log.LOG_FILE_NAME, rotation=Log.LOG_FILE_ROTATION)
+
+    args = _init_parser().parse_args()
+
+    env_configs = EnvConfigs()
+
+    _print_args(args)
 
     constructor = GeneralConstructor(env_configs=env_configs)
     log_exporter = LogExporter()
