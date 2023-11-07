@@ -61,5 +61,4 @@ python -m pip install -r .\requirements.txt
 
 ## TODO
 1. 원하는 형태로 파일 및 디렉토리 이름 포매팅
-2. smi -> srt 변환
-3. 제목을 TheMovieDB와 비교해서 정확도 향상
+2. 제목을 TheMovieDB와 비교해서 정확도 향상
