@@ -33,10 +33,10 @@ Traceback : \n{traceback.format_exc()}
                 file.flush()
 
             try:
-                os.chmod(file.name, 755)
+                os.chmod(file.name, Constants.DEFAULT_PERMISSION_FOR_LOG_FILE)
             except Exception as e:
                 logger.warning(
-                    f"Failed to grant permission 755 to {file.name}, error : {str(e)}"
+                    f"Failed to grant permission {Constants.DEFAULT_PERMISSION_FOR_LOG_FILE} to {file.name}, error : {str(e)}"
                 )
 
             self._log = ""
