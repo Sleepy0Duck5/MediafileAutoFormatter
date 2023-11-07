@@ -1,5 +1,5 @@
 import os
-from typing import List, Self, Optional
+from typing import List, Optional
 
 from src.model.structable import Structable
 from src.model.file import File, FileType
@@ -34,7 +34,7 @@ class Folder(Structable):
     def get_files(self) -> List[File]:
         return [x for x in self._structs if isinstance(x, File)]
 
-    def get_folders(self) -> List[Self]:
+    def get_folders(self) -> List:
         return [x for x in self._structs if isinstance(x, Folder)]
 
     def get_number_of_files_by_type(self, file_type: FileType) -> int:
