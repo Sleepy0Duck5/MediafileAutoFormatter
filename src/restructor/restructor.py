@@ -264,29 +264,33 @@ class MovieRestructor(GeneralRestructor):
     def _rename_subtitle_and_append(
         self, root_folder: Folder, metadata: MovieMetadata, subtitle_files: List[File]
     ) -> None:
-        media_files = metadata.get_media_files()
-        if len(media_files) <= 0:
-            raise NoMeidaFileException
+        try:
+            media_files = metadata.get_media_files()
+            if len(media_files) <= 0:
+                raise NoMeidaFileException
 
-        if len(subtitle_files) <= 0:
-            return
+            if len(subtitle_files) <= 0:
+                return
 
-        subtitle_file = subtitle_files[0]
+            subtitle_file = subtitle_files[0]
 
-        new_file_name = self._formatter.rename_subtitle_file(
-            metadata=metadata, subtitle_file=subtitle_file
-        )
+            new_file_name = self._formatter.rename_subtitle_file(
+                metadata=metadata, subtitle_file=subtitle_file
+            )
 
-        new_file_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
+            new_file_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
 
-        restructed_subtitle_file = RestructedFile(
-            absolute_path=new_file_path,
-            original_file=subtitle_file,
-        )
+            restructed_subtitle_file = RestructedFile(
+                absolute_path=new_file_path,
+                original_file=subtitle_file,
+            )
 
-        self._append_struct_to_folder(
-            folder=root_folder, struct=restructed_subtitle_file
-        )
+            self._append_struct_to_folder(
+                folder=root_folder, struct=restructed_subtitle_file
+            )
+        except Exception as e:
+            logger.warning(f"Failed to rename subtitles : {str(e)}")
+            self._log += f"[WARNING] Failed to rename subtitles : {str(e)}"
 
     def _restruct_mediafile(
         self, root_folder: Folder, metadata: SubtitleContainingMetadata
@@ -425,34 +429,40 @@ class TVRestructor(GeneralRestructor):
     def _rename_subtitle_and_append(
         self, root_folder: Folder, metadata: SeasonMetadata, subtitle_files: List[File]
     ) -> None:
-        episodes = metadata.get_episode_files()
-        if len(episodes) <= 0:
-            raise NoMeidaFileException
+        try:
+            episodes = metadata.get_episode_files()
+            if len(episodes) <= 0:
+                raise NoMeidaFileException
 
-        subtitles_by_episode = self._organaize_subtitles_by_episode(
-            subtitle_files=subtitle_files
-        )
-
-        for episode_index in subtitles_by_episode.keys():
-            subtitle_file = subtitles_by_episode[episode_index]
-
-            new_title = self._formatter.rename_file(
-                metadata=metadata,
-                file=subtitle_file,
-                episode_index=episode_index,
-            )
-            new_file_name = f"{new_title}.{subtitle_file.get_extension()}"
-
-            new_file_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
-
-            restructed_subtitle_file = RestructedFile(
-                absolute_path=new_file_path,
-                original_file=subtitle_file,
+            subtitles_by_episode = self._organaize_subtitles_by_episode(
+                subtitle_files=subtitle_files
             )
 
-            self._append_struct_to_folder(
-                folder=root_folder, struct=restructed_subtitle_file
-            )
+            for episode_index in subtitles_by_episode.keys():
+                subtitle_file = subtitles_by_episode[episode_index]
+
+                new_title = self._formatter.rename_file(
+                    metadata=metadata,
+                    file=subtitle_file,
+                    episode_index=episode_index,
+                )
+                new_file_name = f"{new_title}.{subtitle_file.get_extension()}"
+
+                new_file_path = os.path.join(
+                    root_folder.get_absolute_path(), new_file_name
+                )
+
+                restructed_subtitle_file = RestructedFile(
+                    absolute_path=new_file_path,
+                    original_file=subtitle_file,
+                )
+
+                self._append_struct_to_folder(
+                    folder=root_folder, struct=restructed_subtitle_file
+                )
+        except Exception as e:
+            logger.warning(f"Failed to rename subtitles : {str(e)}")
+            self._log += f"[WARNING] Failed to rename subtitles : {str(e)}"
 
     def _organaize_subtitles_by_episode(self, subtitle_files: List[File]):
         subtitles_by_episode = {}
