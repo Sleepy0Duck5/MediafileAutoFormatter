@@ -59,9 +59,9 @@ python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_P
 ```
 
 
-### Formating example
+## Formating example
 
-#### TV Example 1
+### TV Example 1
 ```
 # Before
 ─ Some title(root folder)
@@ -83,7 +83,7 @@ python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_P
         └ Some title - S01E03.ko.srt
 ```
 
-#### TV Example 2 : Multiple season
+### TV Example 2 : Multiple season
 ```
 # Before
 ─ Some title(root folder)
