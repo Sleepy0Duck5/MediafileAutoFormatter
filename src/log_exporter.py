@@ -28,16 +28,9 @@ Target Path : {target_path}
 Traceback : \n{traceback.format_exc()}
 """
 
-            with open(log_path, "a+") as file:
+            with open(log_path, "a+", ) as file:
                 file.write(body)
                 file.flush()
-
-            try:
-                os.chmod(file.name, Constants.DEFAULT_PERMISSION_FOR_LOG_FILE)
-            except Exception as e:
-                logger.warning(
-                    f"Failed to grant permission {Constants.DEFAULT_PERMISSION_FOR_LOG_FILE} to {file.name}, error : {str(e)}"
-                )
 
             self._log = ""
 

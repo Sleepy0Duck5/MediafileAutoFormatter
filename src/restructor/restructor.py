@@ -80,28 +80,25 @@ class GeneralRestructor(Restructor):
         return new_root_folder
 
     def _create_restruct_log(self, root_folder: Folder) -> None:
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_file.write(self._log.encode("utf-8"))
-            temp_file.flush()
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        temp_file.write(self._log.encode("utf-8"))
+        temp_file.flush()
 
-            log_path = os.path.join(root_folder.get_absolute_path(), "MAF_Restruct.log")
-            log_file = RestructedFile(
-                absolute_path=log_path,
-                original_file=File(
-                    absolute_path=temp_file.name, file_type=FileType.EXTRA
-                ),
+        log_path = os.path.join(root_folder.get_absolute_path(), "MAF_Restruct.log")
+        log_file = RestructedFile(
+            absolute_path=log_path,
+            original_file=File(absolute_path=temp_file.name, file_type=FileType.EXTRA),
+        )
+
+        try:
+            os.chmod(temp_file.name, Constants.DEFAULT_PERMISSION_FOR_LOG_FILE)
+        except Exception as e:
+            logger.warning(
+                f"Failed to grant permission {Constants.DEFAULT_PERMISSION_FOR_LOG_FILE} to {temp_file.name}, error : {str(e)}"
             )
 
-            try:
-                os.chmod(temp_file.name, Constants.DEFAULT_PERMISSION_FOR_LOG_FILE)
-            except Exception as e:
-                logger.warning(
-                    f"Failed to grant permission {Constants.DEFAULT_PERMISSION_FOR_LOG_FILE} to {temp_file.name}, error : {str(e)}"
-                )
-
-            root_folder.append_struct(log_file)
-            self._log = ""
-            return
+        root_folder.append_struct(log_file)
+        self._log = ""
 
     def _restruct_subtitle(
         self,
