@@ -150,7 +150,10 @@ class GeneralRestructor(Restructor):
                     logger.info(
                         f"smi subtitle converted into srt : {subtitle_file.get_absolute_path()}"
                     )
-                    self._log += f"[CONVERTED] smi subtitle converted into srt : {subtitle_file.get_absolute_path()}"
+                    self._log += (
+                        f"[CONVERTED] smi subtitle converted into srt : {subtitle_file.get_absolute_path()}"
+                        + "\n"
+                    )
                 except Exception:
                     logger.warning(
                         f"Failed to convert subtitle : {subtitle_file.get_absolute_path()}"
@@ -478,8 +481,10 @@ class TVRestructor(GeneralRestructor):
         )
 
         for subtitle_file in subtitle_files:
-            episode_index = self._subtitle_analyzer._extract_episode_index_by_file_name(
-                file_name=subtitle_file.get_title(), prefix=subtitle_files_prefix
+            episode_index = (
+                self._subtitle_analyzer._extract_episode_index_from_file_name(
+                    file_name=subtitle_file.get_title(), prefix=subtitle_files_prefix
+                )
             )
 
             if subtitles_by_episode.get(episode_index):

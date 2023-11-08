@@ -45,6 +45,12 @@ def extract_season_index(folder_name: str) -> Optional[int]:
     return _extract_number_from_string(str=folder_name)
 
 
+def replace_special_chars(str: str) -> str:
+    underscore_replaced = str.replace("_", " ")
+    dot_replaced = underscore_replaced.replace(".", " ")
+    return dot_replaced
+
+
 class MediaAnalyzer(metaclass=ABCMeta):
     def __init__(
         self,
@@ -262,7 +268,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             file_title = media_file.get_title()
 
             try:
-                episode_index = self._extract_episode_index_by_file_name(
+                episode_index = self._extract_episode_index_from_file_name(
                     file_name=file_title, prefix=file_name_prefix
                 )
             except EpisodeIndexNotFoundException:
@@ -286,7 +292,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         saved_tokens: List[Token] = []
 
         for media_file in files:
-            underscore_replaced = media_file.get_title().replace("_", " ")
+            underscore_replaced = replace_special_chars(str=media_file.get_title())
             splited_tokens = underscore_replaced.split(" ")
 
             idx = 0
@@ -324,8 +330,8 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         saved_tokens.append(input_token)
 
-    def _extract_episode_index_by_file_name(self, file_name: str, prefix: str) -> int:
-        underscore_replaced = file_name.replace("_", " ")
+    def _extract_episode_index_from_file_name(self, file_name: str, prefix: str) -> int:
+        underscore_replaced = replace_special_chars(str=file_name)
         suffix_removed = trunc_suffix_from_file_name(file_name=underscore_replaced)
         prefix_removed = suffix_removed.replace(prefix, "")
         splited = prefix_removed.split(" ")
@@ -337,10 +343,9 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                 return int(str_index)
 
             # try to split by episode spliter
-            splited_episode = str_index.split("E")
-            if len(splited_episode) >= 2:
-                if splited_episode[1].isnumeric():
-                    return int(splited_episode[1])
+            index = self._extract_episode_index_from_normalized_form(str=str_index)
+            if index:
+                return index
 
             # try to remain number only
             index = _extract_number_from_string(str=str_index)
@@ -348,3 +353,19 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                 return index
 
         raise EpisodeIndexNotFoundException
+
+    def _extract_episode_index_from_normalized_form(self, str: str) -> Optional[int]:
+        try:
+            for i in re.finditer(r"S[0-9]+E[0-9]+", str):
+                str_episode = i.group()
+                splited = str_episode.split("E")[1]
+
+                if splited.isnumeric():
+                    return int(splited)
+
+        except Exception as e:
+            logger.warning(
+                f"Failed to extract episode index from normalized form (format : S00E00) : {e}"
+            )
+
+        return None
