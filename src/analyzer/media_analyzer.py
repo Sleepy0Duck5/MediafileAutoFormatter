@@ -197,6 +197,9 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         folders.sort(key=lambda struct: struct.get_title())
 
         for season_folder in media_root.get_folders():
+            if season_folder.get_number_of_files_by_type(file_type=FileType.MEDIA) == 0:
+                continue
+
             season_title = season_folder.get_title()
             season_index = extract_season_index(folder_name=season_title)
 
