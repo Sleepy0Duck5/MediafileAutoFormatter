@@ -196,11 +196,15 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         folders = media_root.get_structs()
         folders.sort(key=lambda struct: struct.get_title())
 
-        for season_folder in media_root.get_folders():
-            if season_folder.get_number_of_files_by_type(file_type=FileType.MEDIA) == 0:
-                continue
+        for folder in media_root.get_folders():
+            # if no media files in folder, then try to search media files in child folders
+            if folder.get_number_of_files_by_type(file_type=FileType.MEDIA) == 0:
+                media_contained_folder = self._find_media_root(root=folder)
+                # no media files, then not a media folder
+                if media_contained_folder == folder:
+                    continue
 
-            season_title = season_folder.get_title()
+            season_title = folder.get_title()
             season_index = extract_season_index(folder_name=season_title)
 
             if not season_index:
@@ -210,14 +214,14 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                     )
                 season_index = 1
 
-            subtitles = self._analyze_subtitles(root=season_folder)
-            media_files = self._get_media_files(root=season_folder)
+            subtitles = self._analyze_subtitles(root=folder)
+            media_files = self._get_media_files(root=folder)
 
             seasons[season_index] = SeasonMetadata(
                 title=builder.get_title(),
                 original_title=season_title,
                 root=media_root,
-                media_root=season_folder,
+                media_root=folder,
                 media_files=media_files,
                 subtitles=subtitles,
                 season_index=season_index,
