@@ -1,5 +1,6 @@
 import re
 from abc import ABCMeta
+from typing import Optional
 
 from src.env_configs import EnvConfigs
 from src.model.metadata import Metadata, SeasonMetadata
@@ -19,6 +20,9 @@ class Formatter(metaclass=ABCMeta):
         raise NotImplementedError
 
     def rename_subtitle_file(self, metadata: Metadata, subtitle_file: File) -> str:
+        raise NotImplementedError
+
+    def extract_subtitle_original_suffix(self, filename: str) -> Optional[str]:
         raise NotImplementedError
 
 
@@ -44,6 +48,14 @@ class GeneralFormatter(Formatter):
             + subtitle_file.get_extension()
         )
         return self.format_name(new_file_name)
+
+    def extract_subtitle_original_suffix(self, filename: str) -> Optional[str]:
+        splited = filename.split(".")
+
+        if len(splited) > 1:
+            return splited[-1]
+
+        return None
 
 
 class MovieFormatter(GeneralFormatter):
@@ -78,8 +90,5 @@ class TVFormatter(GeneralFormatter):
                     break
 
             cursor = iter.end()
-
-        if file.get_file_type() == FileType.SUBTITLE:
-            new_file_name += "." + self._env_configs._SUBTITLE_SUFFIX
 
         return self.format_name(new_file_name)

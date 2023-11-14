@@ -12,3 +12,7 @@ class NoMeidaFileException(RestructorException):
 
 class SubtitleIndexDuplicatedException(RestructorException):
     pass
+
+
+class NoSubtitleFileException(RestructorException):
+    pass

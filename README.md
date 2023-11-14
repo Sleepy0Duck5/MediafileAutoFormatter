@@ -6,11 +6,38 @@
 - multiple : source_path 내 서로 다른 모든 미디어를 변환하고자 하는 경우 True로 설정
 (False라면 source_path가 단일 미디어라고 취급함)
 
+# Environments
+```
+# Media
+MEDIA_EXTENSIONS : 설정된 확장자를 미디어 파일로 인식합니다.
+
+# Localization
+SUBTITLE_SUFFIX : 자막 파일의 접미사를 설정합니다.
+
+# Subtitle
+CONVERT_SMI_TO_SRT : SMI 파일을 SRT 파일로 변환합니다.
+SUBTITLE_EXTENSIONS : 설정된 확장자를 자막 파일로 인식합니다.
+
+# Season File format
+FILENAME_FORMAT : 파일 이름의 포맷을 설정합니다. {{ title }}, {{ season_number }}, {{ episode_number }} 는 반드시 포함되어야 합니다.
+SEASON_NUMBER_DIGIT : 시즌 숫자를 포맷할 때 몇자리 수로 할 것인지를 설정합니다. (ex. 2 -> 01, 02, 03, ...)
+EPISODE_NUMBER_DIGIT : 에피소드 숫자를 포맷할 때 몇자리 수로 할 것인지를 설정합니다. (ex. 3 -> 001, 002, 003, ...)
+
+# Debug
+EXPORT_DEBUG_LOG_FILE : 프로그램 실행 경로에 로그 파일을 남깁니다.
+```
+
+
+# How to run
+
 ```
 # install requirements
 python -m pip install -r .\requirements.txt
 
 # create .env file before run
+cp .\env.example .\env
+
+# run
 python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_PATH"
 ```
 

@@ -1,5 +1,3 @@
-import os
-import random
 import tempfile
 from abc import ABCMeta
 from patoolib import extract_archive
@@ -12,6 +10,7 @@ from src.model.metadata import (
     Metadata,
     SubtitleContainingMetadata,
 )
+from src.restructor.errors import NoSubtitleFileException
 from src.constructor.constructor import Constructor
 from src.errors import InvalidMediaTypeException
 from src.constants import FileType
@@ -44,4 +43,20 @@ class GeneralSubtitleExtractor(SubtitleExtractor):
             outdir=temp_extracted_subtitle_path,
         )
 
-        return self._constrcutor.struct(source_path=temp_extracted_subtitle_path)
+        extracted_subtitle = self._constrcutor.struct(
+            source_path=temp_extracted_subtitle_path
+        )
+
+        return self._find_subtitle_containing_folder(root=extracted_subtitle)
+
+    # find subtitles in extracted folder
+    def _find_subtitle_containing_folder(self, root: Folder) -> Folder:
+        if root.contains_subtitle_file():
+            return root
+
+        for child in root.get_folders():
+            return self._find_subtitle_containing_folder(root=child)
+
+        raise NoSubtitleFileException(
+            f"Subtitle archive extracted, but no subtitle found. (extracted_path={root.get_absolute_path()})"
+        )

@@ -3,7 +3,7 @@ import tempfile
 import shutil
 from abc import ABCMeta
 from loguru import logger
-from typing import List
+from typing import List, Dict
 
 from src.model.structable import Structable
 from src.model.file import File, RestructedFile
@@ -448,32 +448,49 @@ class TVRestructor(GeneralRestructor):
             )
 
             for episode_index in subtitles_by_episode.keys():
-                subtitle_file = subtitles_by_episode[episode_index]
+                subtitle_files = subtitles_by_episode[episode_index]
 
-                new_title = self._formatter.rename_file(
-                    metadata=metadata,
-                    file=subtitle_file,
-                    episode_index=episode_index,
-                )
-                new_file_name = f"{new_title}.{subtitle_file.get_extension()}"
+                index = 0
+                for subtitle_file in subtitle_files:
+                    new_title = self._formatter.rename_file(
+                        metadata=metadata,
+                        file=subtitle_file,
+                        episode_index=episode_index,
+                    )
 
-                new_file_path = os.path.join(
-                    root_folder.get_absolute_path(), new_file_name
-                )
+                    if len(subtitle_files) <= 1:
+                        new_suffix = self._env_configs._SUBTITLE_SUFFIX
+                    else:
+                        new_suffix = self._formatter.extract_subtitle_original_suffix(
+                            filename=subtitle_file.get_title()
+                        )
 
-                restructed_subtitle_file = RestructedFile(
-                    absolute_path=new_file_path,
-                    original_file=subtitle_file,
-                )
+                    if index <= 0:
+                        new_file_name = (
+                            f"{new_title}.{new_suffix}.{subtitle_file.get_extension()}"
+                        )
+                    else:
+                        new_file_name = f"{new_title}.{new_suffix} ({index}).{subtitle_file.get_extension()}"
 
-                self._append_struct_to_folder(
-                    folder=root_folder, struct=restructed_subtitle_file
-                )
+                    index += 1
+
+                    new_file_path = os.path.join(
+                        root_folder.get_absolute_path(), new_file_name
+                    )
+
+                    restructed_subtitle_file = RestructedFile(
+                        absolute_path=new_file_path,
+                        original_file=subtitle_file,
+                    )
+
+                    self._append_struct_to_folder(
+                        folder=root_folder, struct=restructed_subtitle_file
+                    )
         except Exception as e:
-            logger.warning(f"Failed to rename subtitles : {str(e)}")
-            self._log += f"[WARNING] Failed to rename subtitles : {str(e)}"
+            logger.warning(f"Failed to rename subtitles : {e}")
+            self._log += f"[WARNING] Failed to rename subtitles : {e}"
 
-    def _organaize_subtitles_by_episode(self, subtitle_files: List[File]):
+    def _organaize_subtitles_by_episode(self, subtitle_files: List[File]) -> Dict:
         subtitles_by_episode = {}
 
         subtitle_files_prefix = self._subtitle_analyzer._get_file_name_prefix(
@@ -488,9 +505,9 @@ class TVRestructor(GeneralRestructor):
             )
 
             if subtitles_by_episode.get(episode_index):
-                raise SubtitleIndexDuplicatedException
-
-            subtitles_by_episode[episode_index] = subtitle_file
+                subtitles_by_episode[episode_index].append(subtitle_file)
+            else:
+                subtitles_by_episode[episode_index] = [subtitle_file]
 
         return subtitles_by_episode
 
