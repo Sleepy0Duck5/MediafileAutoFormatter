@@ -47,7 +47,7 @@ class GeneralConstructor(Constructor):
             raise e
 
     def _get_file_type(self, absolute_path: str) -> FileType:
-        extension = extract_extension(absolute_path=absolute_path)
+        extension = extract_extension(absolute_path=absolute_path).lower()
 
         if extension in (self._env_confg._MEDIA_EXTENSIONS):
             return FileType.MEDIA
