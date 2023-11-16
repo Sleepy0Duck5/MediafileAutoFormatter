@@ -5,6 +5,7 @@ from src.analyzer.metadata_reader import MetadataReader
 from src.constants import Constants, Extensions, MediaType, FileType
 from src.env_configs import EnvConfigs
 from src.analyzer.error import MediaNotFoundException
+from src.errors import AbortException
 
 
 def _is_user_define_metadata_included(root: Folder) -> bool:
@@ -42,7 +43,7 @@ class GeneralMediaTypeAnalyzer(MediaTypeAnalyzer):
             raise NotImplementedError("User define metadata not work yet.")
 
         if _is_error_log_included(root=root):
-            raise NotImplementedError("Error log file already exists! Aborting...")
+            raise AbortException("Error log file already exists! Aborting...")
 
         return self._analyze_media_type(root=root)
 

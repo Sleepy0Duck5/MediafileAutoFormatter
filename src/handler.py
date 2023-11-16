@@ -1,7 +1,7 @@
 import os
 from loguru import logger
 
-from src.errors import DirectoryNotFoundException
+from src.errors import DirectoryNotFoundException, AbortException
 from src.constructor.constructor import Constructor
 from src.analyzer.media_type_analyzer import MediaTypeAnalyzer
 from src.analyzer.media_analyzer_factory import MediaAnalyzerFactory
@@ -50,7 +50,8 @@ class Handler:
             for child_name in child_directories:
                 child_path = os.path.join(source_path, child_name)
                 self._process_media(source_path=child_path, target_path=target_path)
-
+        except AbortException as ae:
+            logger.opt(exception=ae).error(ae)
         except Exception as e:
             logger.opt(exception=e).error(e)
             self._log_exporter.export_traceback_as_file(

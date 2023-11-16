@@ -16,3 +16,7 @@ class InvalidMetadataTypeException(GeneralException):
 
 class InvalidEnvConfig(GeneralException):
     pass
+
+
+class AbortException(GeneralException):
+    pass
