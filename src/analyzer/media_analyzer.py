@@ -207,7 +207,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             season_title = folder.get_title()
             season_index = extract_season_index(folder_name=season_title)
 
-            if not season_index:
+            if season_index is None:
                 if len(media_root.get_folders()) > 1:
                     raise SeasonIndexNotFoundException(
                         "Failed to detect season index from season folder name, but multiple season folder exists. Try to rename season foler name."
