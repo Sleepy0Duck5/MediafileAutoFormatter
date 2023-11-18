@@ -17,6 +17,7 @@ SUBTITLE_SUFFIX : 자막 파일의 접미사를 설정합니다.
 # Subtitle
 CONVERT_SMI_TO_SRT : SMI 파일을 SRT 파일로 변환합니다.
 SUBTITLE_EXTENSIONS : 설정된 확장자를 자막 파일로 인식합니다.
+SYNC_SUBTITLE_AUTOMATICALLY : 자막 파일의 싱크를 미디어 파일에 맞게 자동으로 조정합니다.
 
 # Season File format
 FILENAME_FORMAT : 파일 이름의 포맷을 설정합니다. {{ title }}, {{ season_number }}, {{ episode_number }} 는 반드시 포함되어야 합니다.
