@@ -44,7 +44,7 @@ class DefaultEnvConifgs:
     MEDIA_EXTENSIONS = '["avi", "mp4", "mkv"]'
     SUBTITLE_SUFFIX = "ko"
     CONVERT_SMI_TO_SRT = "True"
-    SUBTITLE_EXTENSIONS = '["smi", "ass"]'
+    SUBTITLE_EXTENSIONS = '["smi", "ass", "srt"]'
     EXPORT_DEBUG_LOG_FILE = "False"
 
 
