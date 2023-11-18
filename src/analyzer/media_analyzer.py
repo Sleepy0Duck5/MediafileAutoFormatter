@@ -27,7 +27,10 @@ from src.env_configs import EnvConfigs
 
 # TODO: regex 적용 필요
 def contains_season_keyword(str: str) -> bool:
-    return (SeasonAlias.KOR_1 in str) or (SeasonAlias.ENG_1 in str.lower())
+    for alias in SeasonAlias.SEASON_ALIASES:
+        if alias in str.lower():
+            return True
+    return False
 
 
 def _extract_number_from_string(str: str) -> Optional[int]:

@@ -51,3 +51,6 @@ class DefaultEnvConifgs:
 class SeasonAlias:
     KOR_1 = "시즌"
     ENG_1 = "season"
+    ENG_2 = "s"
+
+    SEASON_ALIASES = [KOR_1, ENG_1, ENG_2]
