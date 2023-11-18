@@ -20,10 +20,10 @@ from src.formatter.subtitle_converter import SubtitleConverter
 from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
 )
+from src.restructor.subtitle_syncer import SubtitleSyncer
 from src.restructor.errors import (
     SeasonNotFoundException,
     NoMeidaFileException,
-    SubtitleIndexDuplicatedException,
 )
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.env_configs import EnvConfigs
@@ -49,11 +49,13 @@ class GeneralRestructor(Restructor):
         formatter: Formatter,
         subtitle_extractor: SubtitleExtractor,
         subtitle_converter: SubtitleConverter,
+        subtitle_syncer: SubtitleSyncer,
     ) -> None:
         self._env_configs = env_configs
         self._formatter = formatter
         self._subtitle_extractor = subtitle_extractor
         self._subtitle_converter = subtitle_converter
+        self._subtitle_syncer = subtitle_syncer
         self._log = ""
 
     def restruct(self, metadata: Metadata, target_path: str) -> Folder:
@@ -226,6 +228,12 @@ class GeneralRestructor(Restructor):
     ) -> None:
         raise NotImplementedError
 
+    def _sync_subtitle(
+        self, subtitles: List[File], media_files: List[File]
+    ) -> List[File]:
+        # TODO : Sync subtitle with media files
+        raise NotImplementedError
+
 
 class MovieRestructor(GeneralRestructor):
     def restruct(self, metadata: MovieMetadata, target_path: str) -> Folder:
@@ -337,8 +345,15 @@ class TVRestructor(GeneralRestructor):
         subtitle_extractor: SubtitleExtractor,
         subtitle_analyzer: TVAnalyzer,
         subtitle_converter: SubtitleConverter,
+        subtitle_syncer: SubtitleSyncer,
     ) -> None:
-        super().__init__(env_configs, formatter, subtitle_extractor, subtitle_converter)
+        super().__init__(
+            env_configs,
+            formatter,
+            subtitle_extractor,
+            subtitle_converter,
+            subtitle_syncer,
+        )
         self._subtitle_analyzer = subtitle_analyzer
 
     def restruct(self, metadata: TVMetadata, target_path: str) -> Folder:

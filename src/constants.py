@@ -45,6 +45,7 @@ class DefaultEnvConifgs:
     SUBTITLE_SUFFIX = "ko"
     CONVERT_SMI_TO_SRT = "True"
     SUBTITLE_EXTENSIONS = '["smi", "ass", "srt"]'
+    SYNC_SUBTITLE_AUTOMATICALLY = "False"
     EXPORT_DEBUG_LOG_FILE = "False"
 
 

@@ -3,3 +3,4 @@ black==23.7.0
 patool==1.12
 loguru==0.7.0
 chardet==5.2.0
+ffsubsync==0.4.25
