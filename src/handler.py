@@ -73,7 +73,8 @@ class Handler:
             ).restruct(metadata=metadata, target_path=target_path)
 
             self._executor.execute(new_root_folder=restructed_folder, metadata=metadata)
-
+        except AbortException as ae:
+            logger.opt(exception=ae).error(ae)
         except Exception as e:
             logger.opt(exception=e).error(e)
             self._log_exporter.export_traceback_as_file(

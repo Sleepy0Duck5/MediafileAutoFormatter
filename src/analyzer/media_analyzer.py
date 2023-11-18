@@ -191,59 +191,24 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         return root
 
+    def _find_season_folders(self, root: Folder) -> List[Folder]:
+        season_folders = []
+
+        for folder in root.get_folders():
+            if contains_season_keyword(folder.get_title()):
+                season_folders.append(folder)
+
+        return season_folders
+
     def _analyze_season(
         self, builder: TVMetadataBuilder, media_root: Folder, root: Folder
     ) -> dict[int, SeasonMetadata]:
         seasons = {}
 
-        folders = media_root.get_structs()
-        folders.sort(key=lambda struct: struct.get_title())
+        season_folders = self._find_season_folders(root=root)
 
-        for folder in media_root.get_folders():
-            # if no media files in folder, then try to search media files in child folders
-            if folder.get_number_of_files_by_type(file_type=FileType.MEDIA) == 0:
-                media_contained_folder = self._find_media_root(root=folder)
-                # no media files, then not a media folder
-                if media_contained_folder == folder:
-                    continue
-
-            season_title = folder.get_title()
-            season_index = extract_season_index(folder_name=season_title)
-
-            if season_index is None:
-                if len(media_root.get_folders()) > 1:
-                    raise SeasonIndexNotFoundException(
-                        "Failed to detect season index from season folder name, but multiple season folder exists. Try to rename season foler name."
-                    )
-                season_index = 1
-
-            subtitles = self._analyze_subtitles(root=folder)
-            media_files = self._get_media_files(root=folder)
-
-            seasons[season_index] = SeasonMetadata(
-                title=builder.get_title(),
-                original_title=season_title,
-                root=media_root,
-                media_root=folder,
-                media_files=media_files,
-                subtitles=subtitles,
-                season_index=season_index,
-                episode_files=self._get_episodes(media_files),
-            )
-
-        # season folder not detected, then media root is unique season folder
-        if not seasons:
-            if media_root.get_number_of_files_by_type(FileType.MEDIA) <= 0:
-                fallback_media_root_found = False
-                for folder in media_root.get_folders():
-                    if folder.get_number_of_files_by_type(file_type=FileType.MEDIA) > 0:
-                        fallback_media_root_found = True
-                        media_root = folder
-                        break
-
-                if not fallback_media_root_found:
-                    raise MediaNotFoundException("TV media found but no seasons")
-
+        # season folder not found
+        if not season_folders:
             subtitles = self._analyze_subtitles(root=root)
             media_files = self._get_media_files(root=media_root)
 
@@ -257,6 +222,34 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                 original_title=media_root.get_title(),
                 root=root,
                 media_root=media_root,
+                media_files=media_files,
+                subtitles=subtitles,
+                season_index=season_index,
+                episode_files=self._get_episodes(media_files),
+            )
+            return seasons
+
+        for season_root in season_folders:
+            season_title = season_root.get_title()
+            season_index = extract_season_index(folder_name=season_title)
+
+            if season_index is None:
+                if len(media_root.get_folders()) > 1:
+                    raise SeasonIndexNotFoundException(
+                        "Failed to detect season index from season folder name, but multiple season folder exists. Try to rename season foler name."
+                    )
+                season_index = 1
+
+            season_media_root = self._find_media_root(root=season_root)
+
+            subtitles = self._analyze_subtitles(root=season_media_root)
+            media_files = self._get_media_files(root=season_media_root)
+
+            seasons[season_index] = SeasonMetadata(
+                title=builder.get_title(),
+                original_title=season_root.get_title(),
+                root=media_root,
+                media_root=season_root,
                 media_files=media_files,
                 subtitles=subtitles,
                 season_index=season_index,
