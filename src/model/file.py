@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 from src.model.structable import Structable
 from src.constants import FileType
@@ -27,7 +26,7 @@ class File(Structable):
         return self._absolute_path
 
     def get_extension(self) -> str:
-        return self._extension
+        return self._extension.lower()
 
     def get_file_type(self) -> FileType:
         return self._file_type
