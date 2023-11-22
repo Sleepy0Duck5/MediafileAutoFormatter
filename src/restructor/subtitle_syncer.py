@@ -2,11 +2,11 @@ import tempfile
 
 from abc import ABCMeta
 from typing import Optional
-from model.file import File
 from ffsubsync import ffsubsync
 from loguru import logger
 
 from src.constants import FileType
+from src.model.file import File
 
 
 class SubtitleSyncer(metaclass=ABCMeta):
