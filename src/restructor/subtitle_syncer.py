@@ -10,9 +10,6 @@ from src.model.file import File
 
 
 class SubtitleSyncer(metaclass=ABCMeta):
-    def __init__(self) -> None:
-        raise NotImplementedError
-
     def sync_subtitle(self, subtitle: File, media_file: File) -> File:
         raise NotImplementedError
 
