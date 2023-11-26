@@ -31,7 +31,7 @@ class GeneralFormatter(Formatter):
         self._env_configs = env_configs
 
     def format_name(self, name: str) -> str:
-        pattern = re.compile('[*\\￦|¦:"/?]')
+        pattern = re.compile('[*\\￦|¦:"/?\\[\\]]')
         replaced = pattern.sub(repl=" ", string=name).strip()
 
         if len(replaced) <= 0:
