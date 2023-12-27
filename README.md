@@ -156,7 +156,8 @@ python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_P
 ```
 
 ## TODO
-1. 원하는 형태로 파일 및 디렉토리 이름 포매팅
-2. 제목을 TheMovieDB와 비교해서 정확도 향상
-3. prefix, suffix 추출 알고리즘 개선
-4. 한 폴더 내에 여러 시즌 미디어가 존재하는 경우, 자동 정리
+- 원하는 형태로 파일 및 디렉토리 이름 포매팅
+- 제목을 TheMovieDB와 비교해서 정확도 향상
+- prefix, suffix 추출 알고리즘 개선
+- 한 폴더 내에 여러 시즌 미디어가 존재하는 경우, 자동 정리
+- smi -> srt 변환 시 &nbsp; 제거
