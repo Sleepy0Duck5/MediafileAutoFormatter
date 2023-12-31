@@ -161,3 +161,4 @@ python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_P
 - prefix, suffix 추출 알고리즘 개선
 - 한 폴더 내에 여러 시즌 미디어가 존재하는 경우, 자동 정리
 - smi -> srt 변환 시 &nbsp; 제거
+- mkv 자막 추출 기능 추가 (이미 자막 존재 시 스킵)
