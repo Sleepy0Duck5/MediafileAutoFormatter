@@ -43,6 +43,11 @@ class GeneralSubtitleConverter(SubtitleConverter):
             encoding = encoding["encoding"]
 
         if not encoding:
+            possible_encodings = chardet.detect_all(smi_raw[: min(len(smi_raw), 40000)])
+            if len(possible_encodings) > 0:
+                encoding = possible_encodings[0]["encoding"]
+
+        if not encoding:
             encoding = "utf-8"
         smi = smi_raw.decode(encoding, errors="ignore")
 
