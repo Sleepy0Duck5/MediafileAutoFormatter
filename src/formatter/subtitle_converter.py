@@ -44,7 +44,7 @@ class GeneralSubtitleConverter(SubtitleConverter):
 
         if not encoding:
             encoding = "utf-8"
-        smi = smi_raw.decode(encoding)
+        smi = smi_raw.decode(encoding, errors="ignore")
 
         langs, data = self._parse(smi)
 
