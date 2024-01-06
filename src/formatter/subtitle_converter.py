@@ -99,7 +99,7 @@ class GeneralSubtitleConverter(SubtitleConverter):
                     return matchtag
             return ""
 
-        def parse_p(item):
+        def parse_p(item: str):
             pattern = re.compile(r"<p class=(\w+)>(.+)", flags=re.I | re.DOTALL)
             parsed = {}
             for match in pattern.finditer(item):
@@ -124,9 +124,13 @@ class GeneralSubtitleConverter(SubtitleConverter):
                 datum["start"] = int(s.split("=")[1])
                 datum["end"] = int(e.split("=")[1]) if e is not None else None
                 datum["content"] = parse_p(c)
+
+                # remove &nbsp;
+                for key in datum["content"].keys():
+                    datum["content"][key] = datum["content"][key].replace("&nbsp;", " ")
                 data.append(datum)
             return get_languages(), data
-        except:
+        except Exception as e:
             print("Conversion ERROR: maybe this file is not supported.")
 
         return get_languages(), data
