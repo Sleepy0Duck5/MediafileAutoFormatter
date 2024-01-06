@@ -78,6 +78,11 @@ class GeneralSubtitleConverter(SubtitleConverter):
                 File(absolute_path=converted_file_path, file_type=FileType.SUBTITLE)
             )
 
+        if len(converted_files) <= 0:
+            raise Exception(
+                "Failed to convert smi subtitle into srt : no converted_files"
+            )
+
         return converted_files
 
     def _parse(self, smi):

@@ -156,11 +156,10 @@ class GeneralRestructor(Restructor):
                         f"[CONVERTED] smi subtitle converted into srt : {subtitle_file.get_absolute_path()}"
                         + "\n"
                     )
-                except Exception:
-                    logger.warning(
-                        f"Failed to convert subtitle : {subtitle_file.get_absolute_path()}"
-                    )
-                    self._log += f"[WARNING] Failed to convert subtitle : {subtitle_file.get_absolute_path()}"
+                except Exception as e:
+                    error_msg = f"[WARNING] Failed to convert subtitle : {subtitle_file.get_absolute_path()}, error_msg={e}"
+                    logger.opt(exception=e).warning(error_msg)
+                    self._log += error_msg
                     result.append(subtitle_file)
             else:
                 result.append(subtitle_file)
