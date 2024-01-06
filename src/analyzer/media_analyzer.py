@@ -1,4 +1,5 @@
 import re
+import itertools
 from abc import ABCMeta
 from typing import List, Optional
 from loguru import logger
@@ -7,15 +8,12 @@ from src.model.file import File
 from src.model.folder import Folder
 from src.model.metadata import Metadata, SeasonMetadata
 from src.model.structable import Structable
-from src.model.token import Token
 from src.analyzer.metadata_builder import (
     MetadataBuilder,
     MovieMetadataBuilder,
     TVMetadataBuilder,
 )
-from src.formatter.subtitle_converter import trunc_suffix_from_file_name
 from src.analyzer.error import (
-    MediaNotFoundException,
     MediaRootNotFoundException,
     EpisodeIndexNotFoundException,
     EpisodeIndexDuplicatedException,
@@ -33,7 +31,16 @@ def find_season_keyword(str: str) -> Optional[str]:
     return None
 
 
-def _extract_number_from_string(str: str, season_keyword: str) -> Optional[int]:
+def _extract_number_from_string(str: str) -> Optional[int]:
+    for i in re.finditer(r"[0-9]+", str):
+        str_index = i.group()
+        if str_index.isnumeric():
+            return int(str_index)
+
+    return None
+
+
+def _extract_season_number_from_string(str: str, season_keyword: str) -> Optional[int]:
     for i in re.finditer(rf"{season_keyword}.?[0-9]+", str.lower()):
         str_index = i.group().replace(season_keyword, "").strip()
         if str_index.isnumeric():
@@ -46,7 +53,9 @@ def extract_season_index(folder_name: str) -> Optional[int]:
     season_keyword = find_season_keyword(str=folder_name)
     if not season_keyword:
         return None
-    return _extract_number_from_string(str=folder_name, season_keyword=season_keyword)
+    return _extract_season_number_from_string(
+        str=folder_name, season_keyword=season_keyword
+    )
 
 
 def replace_special_chars(str: str) -> str:
@@ -293,68 +302,32 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         return episodes
 
     def _get_file_name_prefix(self, files: List[File]) -> str:
-        saved_tokens: List[Token] = []
+        file_names = [file.get_title() for file in files]
 
-        for media_file in files:
-            underscore_replaced = replace_special_chars(str=media_file.get_title())
-            splited_tokens = underscore_replaced.split(" ")
+        res = "".join(
+            c[0]
+            for c in itertools.takewhile(
+                lambda x: all(x[0] == y for y in x), zip(*file_names)
+            )
+        )
 
-            idx = 0
-            for str_token in splited_tokens:
-                token = Token(idx, str_token)
-                self._update_saved_tokens(saved_tokens=saved_tokens, input_token=token)
-
-                idx += 1
-
-        prefix_token_last_index = -1
-        for idx in range(len(saved_tokens)):
-            if saved_tokens[idx].get_count() <= 1:
-                prefix_token_last_index = idx - 1
-                break
-
-        if prefix_token_last_index >= 0:
-            prefix = ""
-
-            for idx in range(len(saved_tokens)):
-                if idx > prefix_token_last_index:
-                    break
-                prefix += saved_tokens[idx].get_str() + " "
-
-            return prefix
-
-        # if each file's token counts is one, then try to extract number
-        logger.warning(f"Failed to found file prefix from file name")
-        return ""
-
-    def _update_saved_tokens(self, saved_tokens: List[Token], input_token: Token):
-        for saved_token in saved_tokens:
-            if saved_token == input_token:
-                saved_token.count_up()
-                return
-
-        saved_tokens.append(input_token)
+        if not res:
+            logger.warning(f"Failed to found file prefix from file name")
+        return res
 
     def _extract_episode_index_from_file_name(self, file_name: str, prefix: str) -> int:
-        underscore_replaced = replace_special_chars(str=file_name)
-        suffix_removed = trunc_suffix_from_file_name(file_name=underscore_replaced)
-        prefix_removed = suffix_removed.replace(prefix, "")
-        splited = prefix_removed.split(" ")
+        prefix_removed = file_name.replace(prefix, "")
 
-        if len(splited) > 0:
-            str_index = splited[0]
+        # try to split by episode spliter
+        index = self._extract_episode_index_from_normalized_form(str=prefix_removed)
+        if index:
+            return index
+
+        for numeric_span in re.finditer(r"\d+", prefix_removed):
+            str_index = numeric_span.group()
 
             if str_index.isnumeric():
                 return int(str_index)
-
-            # try to split by episode spliter
-            index = self._extract_episode_index_from_normalized_form(str=str_index)
-            if index:
-                return index
-
-            # try to remain number only
-            index = _extract_number_from_string(str=str_index)
-            if index:
-                return index
 
         raise EpisodeIndexNotFoundException
 
