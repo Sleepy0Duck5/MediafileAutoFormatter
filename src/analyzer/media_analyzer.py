@@ -26,16 +26,16 @@ from src.env_configs import EnvConfigs
 
 
 # TODO: regex 적용 필요
-def contains_season_keyword(str: str) -> bool:
+def contains_season_keyword(str: str) -> Optional[str]:
     for alias in SeasonAlias.SEASON_ALIASES:
         if alias in str.lower():
-            return True
-    return False
+            return alias
+    return None
 
 
-def _extract_number_from_string(str: str) -> Optional[int]:
-    for i in re.finditer(r"[0-9]+", str):
-        str_index = i.group()
+def _extract_number_from_string(str: str, season_keyword: str) -> Optional[int]:
+    for i in re.finditer(rf"{season_keyword}.?[0-9]+", str.lower()):
+        str_index = i.group().replace(season_keyword, "").strip()
         if str_index.isnumeric():
             return int(str_index)
 
@@ -43,9 +43,12 @@ def _extract_number_from_string(str: str) -> Optional[int]:
 
 
 def extract_season_index(folder_name: str) -> Optional[int]:
-    if not contains_season_keyword(str=folder_name):
+    contained_season_keyword = contains_season_keyword(str=folder_name)
+    if not contained_season_keyword:
         return None
-    return _extract_number_from_string(str=folder_name)
+    return _extract_number_from_string(
+        str=folder_name, season_keyword=contained_season_keyword
+    )
 
 
 def replace_special_chars(str: str) -> str:
