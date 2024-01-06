@@ -26,7 +26,7 @@ from src.env_configs import EnvConfigs
 
 
 # TODO: regex 적용 필요
-def contains_season_keyword(str: str) -> Optional[str]:
+def find_season_keyword(str: str) -> Optional[str]:
     for alias in SeasonAlias.SEASON_ALIASES:
         if alias in str.lower():
             return alias
@@ -43,12 +43,10 @@ def _extract_number_from_string(str: str, season_keyword: str) -> Optional[int]:
 
 
 def extract_season_index(folder_name: str) -> Optional[int]:
-    contained_season_keyword = contains_season_keyword(str=folder_name)
-    if not contained_season_keyword:
+    season_keyword = find_season_keyword(str=folder_name)
+    if not season_keyword:
         return None
-    return _extract_number_from_string(
-        str=folder_name, season_keyword=contained_season_keyword
-    )
+    return _extract_number_from_string(str=folder_name, season_keyword=season_keyword)
 
 
 def replace_special_chars(str: str) -> str:
@@ -185,7 +183,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         for folder in root.get_folders():
             if folder.get_number_of_files_by_type(file_type=FileType.MEDIA) > 0 or (
-                contains_season_keyword(folder.get_title())
+                find_season_keyword(folder.get_title())
             ):
                 media_contained_folder.append(folder)
 
@@ -198,7 +196,7 @@ class TVAnalyzer(GeneralMediaAnalyzer):
         season_folders = []
 
         for folder in root.get_folders():
-            if contains_season_keyword(folder.get_title()):
+            if find_season_keyword(folder.get_title()):
                 season_folders.append(folder)
 
         return season_folders
