@@ -303,6 +303,8 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
     def _get_file_name_prefix(self, files: List[File]) -> str:
         file_names = [file.get_title() for file in files]
+        if len(file_names) <= 1:
+            return ""
 
         res = "".join(
             c[0]
