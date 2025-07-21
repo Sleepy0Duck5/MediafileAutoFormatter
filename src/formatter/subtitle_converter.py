@@ -9,5 +9,5 @@ class SubtitleConverter(metaclass=ABCMeta):
     def __init__(self, env_configs: EnvConfigs) -> None:
         self._env_configs = env_configs
 
-    def convert_smi_to_srt(self, file: File) -> List[File]:
+    def convert_subtitle(self, file: File) -> List[File]:
         raise NotImplementedError

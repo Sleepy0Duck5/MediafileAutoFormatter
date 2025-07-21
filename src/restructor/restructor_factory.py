@@ -4,6 +4,7 @@ from src.analyzer.media_analyzer import TVAnalyzer
 from src.formatter.formatter import MovieFormatter, TVFormatter
 from src.formatter.subtitle_converter import SubtitleConverter
 from src.formatter.smi_to_srt_converter import SmiToSrtConverter
+from src.formatter.smi_to_ass_converter import SmiToAssConverter
 from src.restructor.subtitle_syncer import GeneralSubtitleSyncer
 from src.constants import MediaType, Extensions
 from src.errors import InvalidMediaTypeException, InvalidEnvConfig
@@ -51,7 +52,7 @@ class RestructorFactory:
         if smi_subtitle_convert_extension == Extensions.SRT:
             return SmiToSrtConverter(env_configs=self._env_configs)
         elif smi_subtitle_convert_extension == Extensions.ASS:
-            pass
+            return SmiToAssConverter(env_configs=self._env_configs)
 
         raise InvalidEnvConfig(
             f"Invalid CONVERT_SMI_EXTENSION {smi_subtitle_convert_extension}"

@@ -27,7 +27,7 @@ def trunc_suffix_from_file_name(file_name: str) -> str:
 
 
 class SmiToSrtConverter(SubtitleConverter):
-    def convert_smi_to_srt(self, file: File) -> List[File]:
+    def convert_subtitle(self, file: File) -> List[File]:
         with open(file.get_absolute_path(), "rb") as smi_file:
             smi_raw = smi_file.read()
             encoding = chardet.detect(smi_raw[: min(len(smi_raw), 40000)])
