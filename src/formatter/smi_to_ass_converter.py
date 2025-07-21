@@ -3,7 +3,7 @@ from typing import List
 from src.model.file import File
 from src.constants import FileType
 from src.formatter.subtitle_converter import SubtitleConverter
-from src.formatter.lib.smi2ass import convert_smi_file_to_ass_file
+from src.formatter.library.smi2ass import convert_smi_file_to_ass_file
 
 
 class SmiToAssConverter(SubtitleConverter):
