@@ -22,7 +22,7 @@ class MkvSubtitleExtractor:
     ) -> List[Structable]:
         """Try to extract subtitle from mkv file when subtitle file not found in directory."""
         if len(subtitles) > 0:
-            return []
+            return subtitles
 
         extracted_subtitles = []
         mkv_file_cnt = 0
