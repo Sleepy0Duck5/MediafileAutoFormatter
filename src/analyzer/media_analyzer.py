@@ -19,6 +19,7 @@ from src.analyzer.error import (
     EpisodeIndexDuplicatedException,
     SeasonIndexNotFoundException,
 )
+from src.analyzer.mkv_subtitle_extractor import MkvSubtitleExtractor
 from src.constants import MediaType, FileType, SeasonAlias
 from src.env_configs import EnvConfigs
 
@@ -28,15 +29,6 @@ def find_season_keyword(str: str) -> Optional[str]:
     for alias in SeasonAlias.SEASON_ALIASES:
         if alias in str.lower():
             return alias
-    return None
-
-
-def _extract_number_from_string(str: str) -> Optional[int]:
-    for i in re.finditer(r"[0-9]+", str):
-        str_index = i.group()
-        if str_index.isnumeric():
-            return int(str_index)
-
     return None
 
 
@@ -66,8 +58,7 @@ def replace_special_chars(str: str) -> str:
 
 class MediaAnalyzer(metaclass=ABCMeta):
     def __init__(
-        self,
-        env_configs: EnvConfigs,
+        self, env_configs: EnvConfigs, mkv_subtitle_extractor: MkvSubtitleExtractor
     ) -> None:
         raise NotImplementedError
 
@@ -76,8 +67,11 @@ class MediaAnalyzer(metaclass=ABCMeta):
 
 
 class GeneralMediaAnalyzer(MediaAnalyzer):
-    def __init__(self, env_configs: EnvConfigs) -> None:
+    def __init__(
+        self, env_configs: EnvConfigs, mkv_subtitle_extractor: MkvSubtitleExtractor
+    ) -> None:
         self._env_configs = env_configs
+        self._mkv_subtitle_extractor = mkv_subtitle_extractor
 
     def _get_builder(self):
         raise NotImplementedError
@@ -144,8 +138,10 @@ class GeneralMediaAnalyzer(MediaAnalyzer):
 
 
 class MovieAnalyzer(GeneralMediaAnalyzer):
-    def __init__(self, env_configs: EnvConfigs) -> None:
-        super().__init__(env_configs)
+    def __init__(
+        self, env_configs: EnvConfigs, mkv_subtitle_extractor: MkvSubtitleExtractor
+    ) -> None:
+        super().__init__(env_configs, mkv_subtitle_extractor)
         self._media_type = MediaType.MOVIE
 
     def _get_builder(self):
@@ -155,10 +151,14 @@ class MovieAnalyzer(GeneralMediaAnalyzer):
         super()._analyze(builder, root)
 
         subtitles = self._analyze_subtitles(root=root)
-        builder.set_subtitles(subtitles=subtitles)
 
         media_files = self._get_media_files(root=builder.get_media_root())
         builder.set_media_files(media_files=media_files)
+
+        subtitles = self._mkv_subtitle_extractor.extract_subtitle_file_from_mkv(
+            media_files=media_files, subtitles=subtitles
+        )
+        builder.set_subtitles(subtitles=subtitles)
 
     def _find_media_root(self, root: Folder) -> Folder:
         if root.get_number_of_files_by_type(file_type=FileType.MEDIA) > 0:
@@ -172,8 +172,10 @@ class MovieAnalyzer(GeneralMediaAnalyzer):
 
 
 class TVAnalyzer(GeneralMediaAnalyzer):
-    def __init__(self, env_configs: EnvConfigs) -> None:
-        super().__init__(env_configs)
+    def __init__(
+        self, env_configs: EnvConfigs, mkv_subtitle_extractor: MkvSubtitleExtractor
+    ) -> None:
+        super().__init__(env_configs, mkv_subtitle_extractor)
         self._media_type = MediaType.TV
 
     def _get_builder(self):
@@ -219,23 +221,16 @@ class TVAnalyzer(GeneralMediaAnalyzer):
 
         # season folder not found
         if not season_folders:
-            subtitles = self._analyze_subtitles(root=root)
-            media_files = self._get_media_files(root=media_root)
-
             # try to extract season index, if none then set as first season
             season_index = extract_season_index(folder_name=media_root.get_title())
             if not season_index:
                 season_index = 1
 
-            seasons[season_index] = SeasonMetadata(
-                title=builder.get_title(),
-                original_title=media_root.get_title(),
-                root=root,
+            seasons[season_index] = self._get_season_metadata(
+                builder=builder,
                 media_root=media_root,
-                media_files=media_files,
-                subtitles=subtitles,
+                root=root,
                 season_index=season_index,
-                episode_files=self._get_episodes(media_files),
             )
             return seasons
 
@@ -251,19 +246,11 @@ class TVAnalyzer(GeneralMediaAnalyzer):
                 season_index = 1
 
             season_media_root = self._find_media_root(root=season_root)
-
-            subtitles = self._analyze_subtitles(root=season_media_root)
-            media_files = self._get_media_files(root=season_media_root)
-
-            seasons[season_index] = SeasonMetadata(
-                title=builder.get_title(),
-                original_title=season_root.get_title(),
-                root=media_root,
+            seasons[season_index] = self._get_season_metadata(
+                builder=builder,
                 media_root=season_root,
-                media_files=media_files,
-                subtitles=subtitles,
+                root=season_media_root,
                 season_index=season_index,
-                episode_files=self._get_episodes(media_files),
             )
 
         return seasons
@@ -348,3 +335,27 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             )
 
         return None
+
+    def _get_season_metadata(
+        self,
+        builder: TVMetadataBuilder,
+        media_root: Folder,
+        root: Folder,
+        season_index: int,
+    ) -> SeasonMetadata:
+        subtitles = self._analyze_subtitles(root=root)
+        media_files = self._get_media_files(root=root)
+        subtitles = self._mkv_subtitle_extractor.extract_subtitle_file_from_mkv(
+            media_files=media_files, subtitles=subtitles
+        )
+
+        return SeasonMetadata(
+            title=builder.get_title(),
+            original_title=media_root.get_title(),
+            root=root,
+            media_root=media_root,
+            media_files=media_files,
+            subtitles=subtitles,
+            season_index=season_index,
+            episode_files=self._get_episodes(media_files),
+        )

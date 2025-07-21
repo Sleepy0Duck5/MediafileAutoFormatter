@@ -100,6 +100,7 @@ class GeneralRestructor(Restructor):
         subtitles: List[Structable],
         metadata: Metadata,
     ) -> None:
+        """Add subtitle file to root_folder after converting subtitle format(smi -> srt/ass) and filename."""
         raise NotImplementedError
 
     def _get_subtitle_files(

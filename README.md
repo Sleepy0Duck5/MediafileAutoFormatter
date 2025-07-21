@@ -13,6 +13,7 @@ MEDIA_EXTENSIONS : 설정된 확장자를 미디어 파일로 인식합니다.
 
 # Localization
 SUBTITLE_SUFFIX : 자막 파일의 접미사를 설정합니다.
+MKV_SUBTITLE_EXTRACTION_LANGUAGE : MKV 파일에서 자막을 추출할 때, 어떤 언어의 자막을 추출할지 결정합니다. ISO 639-2 언어 코드로 설정이 필요하고, mkvtoolnix가 설치되어 있어야 합니다.
 
 # Subtitle
 CONVERT_SMI : SMI 파일을 다른 확장자로 변환합니다.
@@ -35,6 +36,9 @@ EXPORT_DEBUG_LOG_FILE : 프로그램 실행 경로에 로그 파일을 남깁니
 ```
 # install requirements
 python -m pip install -r .\requirements.txt
+
+# (optional) install mkvtoolnix for mkv subtitle extraction
+sudo apt install mkvtoolnix
 
 # create .env file before run
 cp .\env.example .\env
@@ -160,4 +164,3 @@ python .\main.py --target_path="YOUR_TARGET_PATH" --multiple=True "YOUR_SOURCE_P
 - 원하는 형태로 파일 및 디렉토리 이름 포매팅
 - 제목을 TheMovieDB와 비교해서 정확도 향상
 - 한 폴더 내에 여러 시즌 미디어가 존재하는 경우, 자동 정리
-- mkv 자막 추출 기능 추가 (이미 자막 존재 시 스킵)
