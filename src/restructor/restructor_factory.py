@@ -2,7 +2,7 @@ from src.restructor.restructor import Restructor, MovieRestructor, TVRestructor
 from src.restructor.subtitle_extractor import SubtitleExtractor
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.formatter.formatter import MovieFormatter, TVFormatter
-from src.formatter.subtitle_converter import GeneralSubtitleConverter
+from src.formatter.smi_to_srt_converter import GeneralSubtitleConverter
 from src.restructor.subtitle_syncer import GeneralSubtitleSyncer
 from src.constants import MediaType
 from src.errors import InvalidMediaTypeException
