@@ -25,6 +25,10 @@ class EnvConfigs:
         self._SUBTITLE_SUFFIX = os.getenv(
             "SUBTITLE_SUFFIX", DefaultEnvConifgs.SUBTITLE_SUFFIX
         )
+        self.MKV_SUBTITLE_EXTRACTION_LANGUAGE = os.getenv(
+            "MKV_SUBTITLE_EXTRACTION_LANGUAGE",
+            DefaultEnvConifgs.MKV_SUBTITLE_EXTRACTION_LANGUAGE,
+        )
         self._CONVERT_SMI = (
             os.getenv(
                 "CONVERT_SMI",

@@ -23,6 +23,7 @@ class Extensions:
     SMI = "smi"
     SRT = "srt"
     ASS = "ass"
+    MKV = "mkv"
 
 
 class MediaType(Enum):
@@ -45,6 +46,7 @@ class DefaultEnvConifgs:
     EPISODE_NUMBER_DIGIT = 2
     MEDIA_EXTENSIONS = '["avi", "mp4", "mkv"]'
     SUBTITLE_SUFFIX = "ko"
+    MKV_SUBTITLE_EXTRACTION_LANGUAGE = "kor"
     CONVERT_SMI = "True"
     CONVERT_SMI_EXTENSION = "ass"
     SUBTITLE_EXTENSIONS = '["smi", "ass", "srt"]'

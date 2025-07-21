@@ -3,6 +3,7 @@ from src.restructor.movie_restructor import MovieRestructor
 from src.restructor.tv_restructor import TVRestructor
 from src.restructor.subtitle_extractor import SubtitleExtractor
 from src.analyzer.media_analyzer import TVAnalyzer
+from src.analyzer.mkv_subtitle_extractor import MkvSubtitleExtractor
 from src.formatter.formatter import MovieFormatter, TVFormatter
 from src.formatter.subtitle_converter import SubtitleConverter
 from src.formatter.smi_to_srt_converter import SmiToSrtConverter
@@ -39,7 +40,12 @@ class RestructorFactory:
                 formatter=TVFormatter(env_configs=self._env_configs),
                 subtitle_extractor=self._subtitle_extractor,
                 subtitle_converter=subtitle_converter,
-                subtitle_analyzer=TVAnalyzer(env_configs=self._env_configs),
+                subtitle_analyzer=TVAnalyzer(
+                    env_configs=self._env_configs,
+                    mkv_subtitle_extractor=MkvSubtitleExtractor(
+                        env_configs=self._env_configs
+                    ),
+                ),
                 subtitle_syncer=GeneralSubtitleSyncer(),
             )
 
