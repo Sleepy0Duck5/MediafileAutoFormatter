@@ -1,6 +1,6 @@
 import os
 
-from typing import List, Iterable
+from typing import List, Iterable, Optional
 from loguru import logger
 from pymkv import MKVFile, MKVTrack
 
@@ -96,7 +96,7 @@ class MkvSubtitleExtractor:
             return False
         return track.track_type.lower().__contains__("subtitle")
 
-    def _get_subtitle_type(self, track_codec: str | None) -> str | None:
+    def _get_subtitle_type(self, track_codec: Optional[str]) -> Optional[str]:
         if not track_codec:
             return None
 
