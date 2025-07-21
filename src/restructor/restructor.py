@@ -137,7 +137,9 @@ class GeneralRestructor(Restructor):
         return self._convert_subtitle(subtitle_files=subtitle_files)
 
     def _convert_subtitle(self, subtitle_files: List[File]) -> List[File]:
-        if not self._env_configs._CONVERT_SMI_TO_SRT:
+        if (not self._env_configs._CONVERT_SMI) or (
+            not self._env_configs._CONVERT_SMI_EXTENSION
+        ):
             return subtitle_files
 
         result = []
