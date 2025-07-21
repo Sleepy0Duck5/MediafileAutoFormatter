@@ -1,4 +1,6 @@
-from src.restructor.restructor import Restructor, MovieRestructor, TVRestructor
+from src.restructor.restructor import Restructor
+from src.restructor.movie_restructor import MovieRestructor
+from src.restructor.tv_restructor import TVRestructor
 from src.restructor.subtitle_extractor import SubtitleExtractor
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.formatter.formatter import MovieFormatter, TVFormatter
