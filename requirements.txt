@@ -4,3 +4,5 @@ patool==1.12
 loguru==0.7.0
 chardet==5.2.0
 ffsubsync==0.4.25
+black==23.7.0
+beautifulsoup4==4.13.4

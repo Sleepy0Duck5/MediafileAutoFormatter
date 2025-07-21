@@ -21,6 +21,8 @@ class Extensions:
     NFO = "nfo"
     LOG = "log"
     SMI = "smi"
+    SRT = "srt"
+    ASS = "ass"
 
 
 class MediaType(Enum):
@@ -43,7 +45,8 @@ class DefaultEnvConifgs:
     EPISODE_NUMBER_DIGIT = 2
     MEDIA_EXTENSIONS = '["avi", "mp4", "mkv"]'
     SUBTITLE_SUFFIX = "ko"
-    CONVERT_SMI_TO_SRT = "True"
+    CONVERT_SMI = "True"
+    CONVERT_SMI_EXTENSION = "ass"
     SUBTITLE_EXTENSIONS = '["smi", "ass", "srt"]'
     SYNC_SUBTITLE_AUTOMATICALLY = "False"
     EXPORT_DEBUG_LOG_FILE = "False"

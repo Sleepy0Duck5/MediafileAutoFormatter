@@ -2,10 +2,12 @@ from src.restructor.restructor import Restructor, MovieRestructor, TVRestructor
 from src.restructor.subtitle_extractor import SubtitleExtractor
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.formatter.formatter import MovieFormatter, TVFormatter
-from src.formatter.subtitle_converter import GeneralSubtitleConverter
+from src.formatter.subtitle_converter import SubtitleConverter
+from src.formatter.smi_to_srt_converter import SmiToSrtConverter
+from src.formatter.smi_to_ass_converter import SmiToAssConverter
 from src.restructor.subtitle_syncer import GeneralSubtitleSyncer
-from src.constants import MediaType
-from src.errors import InvalidMediaTypeException
+from src.constants import MediaType, Extensions
+from src.errors import InvalidMediaTypeException, InvalidEnvConfig
 from src.env_configs import EnvConfigs
 
 
@@ -17,14 +19,16 @@ class RestructorFactory:
         self._subtitle_extractor = subtitle_extractor
 
     def create(self, media_type: MediaType) -> Restructor:
+        subtitle_converter = self._get_subtitle_converter(
+            self._env_configs._CONVERT_SMI_EXTENSION
+        )
+
         if media_type == MediaType.MOVIE:
             return MovieRestructor(
                 env_configs=self._env_configs,
                 formatter=MovieFormatter(env_configs=self._env_configs),
                 subtitle_extractor=self._subtitle_extractor,
-                subtitle_converter=GeneralSubtitleConverter(
-                    env_configs=self._env_configs
-                ),
+                subtitle_converter=subtitle_converter,
                 subtitle_syncer=GeneralSubtitleSyncer(),
             )
         elif media_type == MediaType.TV:
@@ -32,11 +36,24 @@ class RestructorFactory:
                 env_configs=self._env_configs,
                 formatter=TVFormatter(env_configs=self._env_configs),
                 subtitle_extractor=self._subtitle_extractor,
-                subtitle_converter=GeneralSubtitleConverter(
-                    env_configs=self._env_configs
-                ),
+                subtitle_converter=subtitle_converter,
                 subtitle_analyzer=TVAnalyzer(env_configs=self._env_configs),
                 subtitle_syncer=GeneralSubtitleSyncer(),
             )
 
         raise InvalidMediaTypeException
+
+    def _get_subtitle_converter(
+        self, smi_subtitle_convert_extension: str
+    ) -> SubtitleConverter:
+        if not smi_subtitle_convert_extension:
+            raise InvalidEnvConfig("CONVERT_SMI_EXTENSION not found")
+
+        if smi_subtitle_convert_extension == Extensions.SRT:
+            return SmiToSrtConverter(env_configs=self._env_configs)
+        elif smi_subtitle_convert_extension == Extensions.ASS:
+            return SmiToAssConverter(env_configs=self._env_configs)
+
+        raise InvalidEnvConfig(
+            f"Invalid CONVERT_SMI_EXTENSION {smi_subtitle_convert_extension}"
+        )

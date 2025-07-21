@@ -137,7 +137,9 @@ class GeneralRestructor(Restructor):
         return self._convert_subtitle(subtitle_files=subtitle_files)
 
     def _convert_subtitle(self, subtitle_files: List[File]) -> List[File]:
-        if not self._env_configs._CONVERT_SMI_TO_SRT:
+        if (not self._env_configs._CONVERT_SMI) or (
+            not self._env_configs._CONVERT_SMI_EXTENSION
+        ):
             return subtitle_files
 
         result = []
@@ -145,15 +147,15 @@ class GeneralRestructor(Restructor):
         for subtitle_file in subtitle_files:
             if subtitle_file.get_extension() == Extensions.SMI:
                 try:
-                    converted_files = self._subtitle_converter.convert_smi_to_srt(
+                    converted_files = self._subtitle_converter.convert_subtitle(
                         file=subtitle_file
                     )
                     result.extend(converted_files)
                     logger.info(
-                        f"smi subtitle converted into srt : {subtitle_file.get_absolute_path()}"
+                        f"smi subtitle converted into {self._env_configs._CONVERT_SMI_EXTENSION} : {subtitle_file.get_absolute_path()}"
                     )
                     self._log += (
-                        f"[CONVERTED] smi subtitle converted into srt : {subtitle_file.get_absolute_path()}"
+                        f"[CONVERTED] smi subtitle converted into {self._env_configs._CONVERT_SMI_EXTENSION} : {subtitle_file.get_absolute_path()}"
                         + "\n"
                     )
                 except Exception as e:

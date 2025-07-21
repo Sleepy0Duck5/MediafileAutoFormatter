@@ -15,7 +15,8 @@ MEDIA_EXTENSIONS : 설정된 확장자를 미디어 파일로 인식합니다.
 SUBTITLE_SUFFIX : 자막 파일의 접미사를 설정합니다.
 
 # Subtitle
-CONVERT_SMI_TO_SRT : SMI 파일을 SRT 파일로 변환합니다.
+CONVERT_SMI : SMI 파일을 다른 확장자로 변환합니다.
+CONVERT_SMI_EXTENSION : SMI 파일을 어떤 확장자로 변환할지 결정합니다. CONVERT_SMI 옵션이 True 일 때 동작합니다. (ex. srt, ass)
 SUBTITLE_EXTENSIONS : 설정된 확장자를 자막 파일로 인식합니다.
 SYNC_SUBTITLE_AUTOMATICALLY : 자막 파일의 싱크를 미디어 파일에 맞게 자동으로 조정합니다.
 
