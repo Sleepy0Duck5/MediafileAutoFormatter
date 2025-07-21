@@ -1,0 +1,16 @@
+[project]
+name = "mediafileautoformatter"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "beautifulsoup4>=4.13.4",
+    "black>=25.1.0",
+    "chardet>=5.2.0",
+    "loguru>=0.7.3",
+    "patool>=4.0.1",
+    "pymkv2>=2.1.1",
+    "python-dotenv>=1.1.1",
+    "uv>=0.8.0",
+]

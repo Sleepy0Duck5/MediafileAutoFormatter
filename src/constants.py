@@ -50,7 +50,6 @@ class DefaultEnvConifgs:
     CONVERT_SMI = "True"
     CONVERT_SMI_EXTENSION = "ass"
     SUBTITLE_EXTENSIONS = '["smi", "ass", "srt"]'
-    SYNC_SUBTITLE_AUTOMATICALLY = "False"
     EXPORT_DEBUG_LOG_FILE = "False"
 
 

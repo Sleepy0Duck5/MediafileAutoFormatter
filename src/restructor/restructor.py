@@ -17,7 +17,6 @@ from src.formatter.subtitle_converter import SubtitleConverter
 from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
 )
-from src.restructor.subtitle_syncer import SubtitleSyncer
 from src.env_configs import EnvConfigs
 from src.errors import DirectoryNotFoundException
 from src.constants import FileType, Constants, Extensions
@@ -41,13 +40,11 @@ class GeneralRestructor(Restructor):
         formatter: Formatter,
         subtitle_extractor: SubtitleExtractor,
         subtitle_converter: SubtitleConverter,
-        subtitle_syncer: SubtitleSyncer,
     ) -> None:
         self._env_configs = env_configs
         self._formatter = formatter
         self._subtitle_extractor = subtitle_extractor
         self._subtitle_converter = subtitle_converter
-        self._subtitle_syncer = subtitle_syncer
         self._log = ""
 
     def restruct(self, metadata: Metadata, target_path: str) -> Folder:
@@ -220,10 +217,4 @@ class GeneralRestructor(Restructor):
     def _rename_subtitle_and_append(
         self, root_folder: Folder, metadata: Metadata, subtitle_files: List[File]
     ) -> None:
-        raise NotImplementedError
-
-    def _sync_subtitle(
-        self, subtitles: List[File], media_files: List[File]
-    ) -> List[File]:
-        # TODO : Sync subtitle with media files
         raise NotImplementedError

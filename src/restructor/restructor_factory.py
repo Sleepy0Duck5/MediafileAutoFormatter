@@ -8,7 +8,6 @@ from src.formatter.formatter import MovieFormatter, TVFormatter
 from src.formatter.subtitle_converter import SubtitleConverter
 from src.formatter.smi_to_srt_converter import SmiToSrtConverter
 from src.formatter.smi_to_ass_converter import SmiToAssConverter
-from src.restructor.subtitle_syncer import GeneralSubtitleSyncer
 from src.constants import MediaType, Extensions
 from src.errors import InvalidMediaTypeException, InvalidEnvConfig
 from src.env_configs import EnvConfigs
@@ -32,7 +31,6 @@ class RestructorFactory:
                 formatter=MovieFormatter(env_configs=self._env_configs),
                 subtitle_extractor=self._subtitle_extractor,
                 subtitle_converter=subtitle_converter,
-                subtitle_syncer=GeneralSubtitleSyncer(),
             )
         elif media_type == MediaType.TV:
             return TVRestructor(
@@ -46,7 +44,6 @@ class RestructorFactory:
                         env_configs=self._env_configs
                     ),
                 ),
-                subtitle_syncer=GeneralSubtitleSyncer(),
             )
 
         raise InvalidMediaTypeException

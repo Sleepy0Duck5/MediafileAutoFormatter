@@ -1,9 +1,0 @@
-python-dotenv
-black
-patool
-loguru
-chardet
-ffsubsync
-black
-beautifulsoup4
-pymkv2

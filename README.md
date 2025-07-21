@@ -19,7 +19,6 @@ MKV_SUBTITLE_EXTRACTION_LANGUAGE : MKV 파일에서 자막을 추출할 때, 어
 CONVERT_SMI : SMI 파일을 다른 확장자로 변환합니다.
 CONVERT_SMI_EXTENSION : SMI 파일을 어떤 확장자로 변환할지 결정합니다. CONVERT_SMI 옵션이 True 일 때 동작합니다. (ex. srt, ass)
 SUBTITLE_EXTENSIONS : 설정된 확장자를 자막 파일로 인식합니다.
-SYNC_SUBTITLE_AUTOMATICALLY : 자막 파일의 싱크를 미디어 파일에 맞게 자동으로 조정합니다.
 
 # Season File format
 FILENAME_FORMAT : 파일 이름의 포맷을 설정합니다. {{ title }}, {{ season_number }}, {{ episode_number }} 는 반드시 포함되어야 합니다.
@@ -34,8 +33,11 @@ EXPORT_DEBUG_LOG_FILE : 프로그램 실행 경로에 로그 파일을 남깁니
 # How to run
 
 ```
+# install uv if not installed
+python -m pip install uv
+
 # install requirements
-python -m pip install -r .\requirements.txt
+uv sync
 
 # (optional) install mkvtoolnix for mkv subtitle extraction
 sudo apt install mkvtoolnix

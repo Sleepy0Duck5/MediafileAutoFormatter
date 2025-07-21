@@ -43,10 +43,6 @@ class EnvConfigs:
         self._SUBTITLE_EXTENSIONS = json.loads(
             os.getenv("SUBTITLE_EXTENSIONS", DefaultEnvConifgs.SUBTITLE_EXTENSIONS)
         )
-        self._SYNC_SUBTITLE_AUTOMATICALLY = os.getenv(
-            "SYNC_SUBTITLE_AUTOMATICALLY",
-            DefaultEnvConifgs.SYNC_SUBTITLE_AUTOMATICALLY,
-        )
         self._EXPORT_DEBUG_LOG_FILE = (
             os.getenv(
                 "EXPORT_DEBUG_LOG_FILE",

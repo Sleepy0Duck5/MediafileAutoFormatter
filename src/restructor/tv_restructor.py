@@ -15,7 +15,6 @@ from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
 )
 from src.restructor.restructor import GeneralRestructor
-from src.restructor.subtitle_syncer import SubtitleSyncer
 from src.restructor.errors import (
     SeasonNotFoundException,
     NoMeidaFileException,
@@ -33,14 +32,12 @@ class TVRestructor(GeneralRestructor):
         subtitle_extractor: SubtitleExtractor,
         subtitle_analyzer: TVAnalyzer,
         subtitle_converter: SubtitleConverter,
-        subtitle_syncer: SubtitleSyncer,
     ) -> None:
         super().__init__(
             env_configs,
             formatter,
             subtitle_extractor,
             subtitle_converter,
-            subtitle_syncer,
         )
         self._subtitle_analyzer = subtitle_analyzer
 
