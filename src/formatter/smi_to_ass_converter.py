@@ -8,7 +8,10 @@ from src.formatter.library.smi2ass import convert_smi_file_to_ass_file
 
 class SmiToAssConverter(SubtitleConverter):
     def convert_subtitle(self, file: File) -> List[File]:
-        ass_file_paths = convert_smi_file_to_ass_file(smi_path=file.get_absolute_path())
+        ass_file_paths = convert_smi_file_to_ass_file(
+            smi_path=file.get_absolute_path(),
+            lang_code=self._env_configs.MKV_SUBTITLE_EXTRACTION_LANGUAGE,
+        )
 
         converted_files = []
 

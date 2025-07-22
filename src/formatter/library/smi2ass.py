@@ -38,7 +38,7 @@ else:
     print("version 3.x needed")
 
 default_lang_code = "kor"
-default_font_name = "sans-serif"
+default_font_name = "arial"
 
 # lang class for multiple language subtitle
 langCode = {
@@ -560,7 +560,9 @@ def separate_by_lang(smi_lines):
     return multiLanguageDictSorted, longlang
 
 
-def convert_smi_file_to_ass_file(smi_path: str) -> List[str]:
+def convert_smi_file_to_ass_file(
+    smi_path: str, lang_code: str = default_lang_code
+) -> List[str]:
     # Open as binary and detect the encoding.
     smi_file = open(smi_path, "rb")
     smi_encoding = chardet.detect(smi_file.read())["encoding"]
@@ -575,9 +577,7 @@ def convert_smi_file_to_ass_file(smi_path: str) -> List[str]:
 
     for lang in ass_dict:
         if len(lang) == 0:
-            ass_path = (
-                smi_path[: smi_path.rfind(".")] + "." + default_lang_code + ".ass"
-            )
+            ass_path = smi_path[: smi_path.rfind(".")] + "." + lang_code + ".ass"
         else:
             ass_path = smi_path[: smi_path.rfind(".")] + "." + lang + ".ass"
 
@@ -586,5 +586,5 @@ def convert_smi_file_to_ass_file(smi_path: str) -> List[str]:
         ass_file.close()
 
         ass_file_paths.append(ass_path)
-    
+
     return ass_file_paths
