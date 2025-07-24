@@ -58,6 +58,9 @@ class GeneralConstructor(Constructor):
         if extension == Extensions.NFO:
             return FileType.NFO
 
+        if extension == Extensions.LOG:
+            return FileType.EXTRA
+
         if _is_archived_subtitle(absolute_path=absolute_path):
             return FileType.ARCHIVED_SUBTITLE
 

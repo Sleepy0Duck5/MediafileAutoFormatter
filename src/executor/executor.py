@@ -29,14 +29,7 @@ class GeneralExecutor(Executor):
             absolute_path=new_root_folder.get_absolute_path(),
         )
 
-        backup_path = os.path.join(
-            os.path.join(new_root_folder.get_absolute_path(), "MAF_Backup"),
-            metadata.get_root().get_title(),
-        )
-        self._move_directory(
-            src_path=metadata.get_root().get_absolute_path(),
-            target_path=backup_path,
-        )
+        self._backup_extra_files(new_root_folder=new_root_folder, metadata=metadata)
 
     def _execute(self, folder: RestructedFolder, absolute_path: str) -> None:
         new_directory_path = self._create_directory(
@@ -86,6 +79,30 @@ class GeneralExecutor(Executor):
         except Exception as e:
             raise e
 
+    def _backup_extra_files(
+        self, new_root_folder: RestructedFolder, metadata: Metadata
+    ) -> None:
+        """Backup original extra files(logs, text files, etc...)"""
+        backup_root_path = os.path.join(
+            new_root_folder.get_absolute_path(), "MAF_Backup"
+        )
+
+        backup_target_path = os.path.join(
+            backup_root_path,
+            metadata.get_root().get_title(),
+        )
+
+        self._move_directory(
+            src_path=metadata.get_root().get_absolute_path(),
+            target_path=backup_target_path,
+        )
+
+        # delete if backup directory is empty
+        if os.path.getsize(backup_root_path) <= 0:
+            self._delete_directory(path=backup_root_path)
+
+        return
+
     def _move_directory(self, src_path: str, target_path: str) -> None:
         try:
             if not os.path.exists(src_path):
@@ -108,3 +125,9 @@ class GeneralExecutor(Executor):
     def _append_log(self, message: str):
         logger.info(message)
         self._log_exporter.append_log(message + "\n")
+
+    def _delete_directory(self, path: str) -> None:
+        try:
+            shutil.rmtree(path=path)
+        except Exception as e:
+            logger.opt(exception=e).warning(f"Failed to delete directory({path})")

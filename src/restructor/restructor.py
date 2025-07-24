@@ -4,6 +4,7 @@ import shutil
 from abc import ABCMeta
 from loguru import logger
 from typing import List
+from datetime import datetime
 
 from src.model.structable import Structable
 from src.model.file import File, RestructedFile
@@ -75,7 +76,8 @@ class GeneralRestructor(Restructor):
         temp_file.write(self._log.encode("utf-8"))
         temp_file.flush()
 
-        log_path = os.path.join(root_folder.get_absolute_path(), "MAF_Restruct.log")
+        log_file_name = f"MAF_Restruct_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.log"
+        log_path = os.path.join(root_folder.get_absolute_path(), log_file_name)
         log_file = RestructedFile(
             absolute_path=log_path,
             original_file=File(absolute_path=temp_file.name, file_type=FileType.EXTRA),
