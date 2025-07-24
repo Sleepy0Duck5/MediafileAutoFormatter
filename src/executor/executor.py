@@ -98,8 +98,7 @@ class GeneralExecutor(Executor):
         )
 
         # delete if backup directory is empty
-        if os.path.getsize(backup_root_path) <= 0:
-            self._delete_directory(path=backup_root_path)
+        self._delete_directory_if_empty(path=backup_root_path)
 
         return
 
@@ -126,8 +125,27 @@ class GeneralExecutor(Executor):
         logger.info(message)
         self._log_exporter.append_log(message + "\n")
 
-    def _delete_directory(self, path: str) -> None:
+    def _delete_directory_if_empty(self, path: str) -> None:
+        dir_size = self._get_dir_size(path=path)
+        if dir_size > 0:
+            return
+
         try:
             shutil.rmtree(path=path)
+            self._append_log(
+                f"No extra files exists, backup directory automatically deleted."
+            )
         except Exception as e:
-            logger.opt(exception=e).warning(f"Failed to delete directory({path})")
+            self._append_log(f"Failed to delete directory({path}), error={str(e)}")
+
+    def _get_dir_size(self, path: str) -> int:
+        total = 0
+
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_file():
+                    total += entry.stat().st_size
+                elif entry.is_dir():
+                    total += self._get_dir_size(path=entry.path)
+
+        return total
