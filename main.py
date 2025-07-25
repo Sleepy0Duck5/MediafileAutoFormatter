@@ -36,6 +36,7 @@ if __name__ == "__main__":
         restructor_factory=RestructorFactory(
             env_configs=env_configs,
             subtitle_extractor=GeneralSubtitleExtractor(constrcutor=constructor),
+            arguments=arguments,
         ),
         executor=GeneralExecutor(log_exporter=log_exporter),
         log_exporter=log_exporter,

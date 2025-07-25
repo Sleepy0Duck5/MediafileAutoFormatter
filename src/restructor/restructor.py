@@ -18,13 +18,19 @@ from src.formatter.subtitle_converter import SubtitleConverter
 from src.restructor.subtitle_extractor import (
     SubtitleExtractor,
 )
+from src.restructor.audio_track_changer import AudioTrackChanger
 from src.env_configs import EnvConfigs
 from src.errors import DirectoryNotFoundException
 from src.constants import FileType, Constants, Extensions
 
 
 class Restructor(metaclass=ABCMeta):
-    def __init__(self, env_configs: EnvConfigs, formatter: Formatter) -> None:
+    def __init__(
+        self,
+        env_configs: EnvConfigs,
+        formatter: Formatter,
+        audio_track_changer: AudioTrackChanger,
+    ) -> None:
         raise NotImplementedError
 
     def restruct(self, metadata: Metadata, target_path: str) -> RestructedFolder:
@@ -39,11 +45,13 @@ class GeneralRestructor(Restructor):
         self,
         env_configs: EnvConfigs,
         formatter: Formatter,
+        audio_track_changer: AudioTrackChanger,
         subtitle_extractor: SubtitleExtractor,
         subtitle_converter: SubtitleConverter,
     ) -> None:
         self._env_configs = env_configs
         self._formatter = formatter
+        self._audio_track_changer = audio_track_changer
         self._subtitle_extractor = subtitle_extractor
         self._subtitle_converter = subtitle_converter
         self._log = ""
