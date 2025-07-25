@@ -94,9 +94,9 @@ class MovieRestructor(GeneralRestructor):
     ) -> None:
         media_file_names = {}
 
-        for file in metadata.get_media_files():
-            new_title = self._formatter.rename_file(metadata=metadata, file=file)
-            new_file_name = f"{new_title}.{file.get_extension()}"
+        for original_file in metadata.get_media_files():
+            new_title = self._formatter.rename_file(metadata=metadata, file=original_file)
+            new_file_name = f"{new_title}.{original_file.get_extension()}"
 
             # Add index to file name if same media file name exists
             if not media_file_names.get(new_file_name):
@@ -104,13 +104,15 @@ class MovieRestructor(GeneralRestructor):
             else:
                 index = media_file_names.get(new_file_name)
                 media_file_names[new_file_name] += 1
-                new_file_name = f"{new_title}({index}).{file.get_extension()}"
+                new_file_name = f"{new_title}({index}).{original_file.get_extension()}"
 
             new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
 
             restructed_media_file = RestructedFile(
-                absolute_path=new_path, original_file=file
+                absolute_path=new_path, original_file=original_file
             )
+
+            self._audio_track_changer.change_audio_track(file=original_file)
 
             self._append_struct_to_folder(
                 folder=root_folder, struct=restructed_media_file

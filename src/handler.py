@@ -8,6 +8,7 @@ from src.analyzer.media_analyzer_factory import MediaAnalyzerFactory
 from src.restructor.restructor_factory import RestructorFactory
 from src.executor.executor import Executor
 from src.log_exporter import LogExporter
+from src.arguments import Arguments
 
 
 class Handler:
@@ -27,10 +28,11 @@ class Handler:
         self._executor = executor
         self._log_exporter = log_exporter
 
-    def process(
-        self, source_path: str, target_path: str, multiple: bool = False
-    ) -> None:
+    def process(self, arguments: Arguments) -> None:
         try:
+            source_path = arguments.source_path
+            target_path = arguments.target_path
+            
             if not os.path.exists(source_path):
                 raise DirectoryNotFoundException(
                     f"Source directory not found : {source_path}"
@@ -40,7 +42,7 @@ class Handler:
                     f"Target directory not found : {target_path}"
                 )
 
-            if not multiple:
+            if not arguments.multiple:
                 self._process_media(source_path=source_path, target_path=target_path)
                 return
 

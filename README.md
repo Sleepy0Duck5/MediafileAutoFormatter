@@ -3,7 +3,8 @@
 
 - source_path : 원본 변환할 미디어 파일이 들어있는 디렉토리 경로
 - target_path : 변환된 파일 및 디렉토리가 저장될 경로
-- multiple : source_path 내 서로 다른 모든 미디어를 변환하고자 하는 경우 True로 설정
+- multiple : source_path 내 서로 다른 모든 미디어를 변환하고자 하는 경우 True로 설정 (optional)
+- mkv_audio_language : mkv 파일의 기본 오디오 언어를 변경하고자 하는 경우 원하는 언어로 설정 [ISO 639-2] (e.g. kor) (optional)
 (False라면 source_path가 단일 미디어라고 취급함)
 
 # Environments

@@ -19,6 +19,7 @@ from src.restructor.errors import (
     SeasonNotFoundException,
     NoMeidaFileException,
 )
+from src.restructor.audio_track_changer import AudioTrackChanger
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.env_configs import EnvConfigs
 from src.constants import SeasonAlias
@@ -29,6 +30,7 @@ class TVRestructor(GeneralRestructor):
         self,
         env_configs: EnvConfigs,
         formatter: TVFormatter,
+        audio_track_changer: AudioTrackChanger,
         subtitle_extractor: SubtitleExtractor,
         subtitle_analyzer: TVAnalyzer,
         subtitle_converter: SubtitleConverter,
@@ -36,6 +38,7 @@ class TVRestructor(GeneralRestructor):
         super().__init__(
             env_configs,
             formatter,
+            audio_track_changer,
             subtitle_extractor,
             subtitle_converter,
         )
@@ -218,12 +221,12 @@ class TVRestructor(GeneralRestructor):
 
         episode_files = metadata.get_episode_files()
         for episode_index in episode_files.keys():
-            file = episode_files[episode_index]
+            original_file = episode_files[episode_index]
 
             new_title = self._formatter.rename_file(
-                metadata=metadata, file=file, episode_index=episode_index
+                metadata=metadata, file=original_file, episode_index=episode_index
             )
-            new_file_name = f"{new_title}.{file.get_extension()}"
+            new_file_name = f"{new_title}.{original_file.get_extension()}"
 
             # Add index to file name if same media file name exists
             if not media_file_names.get(new_file_name):
@@ -231,13 +234,15 @@ class TVRestructor(GeneralRestructor):
             else:
                 index = media_file_names.get(new_file_name)
                 media_file_names[new_file_name] += 1
-                new_file_name = f"{new_title} ({index}).{file.get_extension()}"
+                new_file_name = f"{new_title} ({index}).{original_file.get_extension()}"
 
             new_path = os.path.join(root_folder.get_absolute_path(), new_file_name)
 
             restructed_media_file = RestructedFile(
-                absolute_path=new_path, original_file=file
+                absolute_path=new_path, original_file=original_file
             )
+
+            self._audio_track_changer.change_audio_track(file=original_file)
 
             self._append_struct_to_folder(
                 folder=root_folder, struct=restructed_media_file

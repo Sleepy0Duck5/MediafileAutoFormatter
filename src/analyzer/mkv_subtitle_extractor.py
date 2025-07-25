@@ -35,12 +35,12 @@ class MkvSubtitleExtractor:
             )
             mkv_file_cnt += 1
 
-            mkvfile = MKVFile(
+            mkv_file = MKVFile(
                 media_file.get_absolute_path(),
             )
-            tracks = mkvfile.get_track()
+            tracks = mkv_file.get_track()
             if not isinstance(tracks, Iterable):
-                raise Exception()
+                raise Exception("MKV File's tracks are not iterable")
 
             for track in tracks:
                 if not self._validate_subtitle_track(track=track):
