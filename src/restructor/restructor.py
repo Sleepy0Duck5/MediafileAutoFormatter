@@ -76,7 +76,9 @@ class GeneralRestructor(Restructor):
         temp_file.write(self._log.encode("utf-8"))
         temp_file.flush()
 
-        log_file_name = f"MAF_Restruct_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.log"
+        log_file_name = (
+            f"MAF_Restruct_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.log"
+        )
         log_path = os.path.join(root_folder.get_absolute_path(), log_file_name)
         log_file = RestructedFile(
             absolute_path=log_path,
