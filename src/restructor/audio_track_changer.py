@@ -106,6 +106,8 @@ class AudioTrackChanger:
 
             command += f"--edit track:a{idx + 1} --set flag-default={flag_default} "
 
+        command = command.strip()
+
         logger.info(f"mkvpropedit command: {command}")
 
         subprocess.call(command)
