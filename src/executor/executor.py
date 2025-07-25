@@ -55,7 +55,10 @@ class GeneralExecutor(Executor):
             )
 
         os.mkdir(new_directory_path)
-        self._append_log(f"New directory created {new_directory_path}")
+        self._log_exporter.append_log(
+            f"New directory created {new_directory_path}",
+            silent=False,
+        )
 
         return new_directory_path
 
@@ -75,7 +78,10 @@ class GeneralExecutor(Executor):
                 )
 
             shutil.move(src_path, target_path)
-            self._append_log(f"File moved successfuly : {src_path} -> {target_path}")
+            self._log_exporter.append_log(
+                f"File moved successfuly : {src_path} -> {target_path}",
+                silent=False,
+            )
         except Exception as e:
             raise e
 
@@ -115,15 +121,12 @@ class GeneralExecutor(Executor):
                 )
 
             shutil.move(src=src_path, dst=target_path)
-            self._append_log(
-                f"Directory moved successfuly : {src_path} -> {target_path}"
+            self._log_exporter.append_log(
+                f"Directory moved successfuly : {src_path} -> {target_path}",
+                silent=False,
             )
         except Exception as e:
             raise e
-
-    def _append_log(self, message: str):
-        logger.info(message)
-        self._log_exporter.append_log(message + "\n")
 
     def _delete_directory_if_empty(self, path: str) -> None:
         dir_size = self._get_dir_size(path=path)
@@ -132,11 +135,15 @@ class GeneralExecutor(Executor):
 
         try:
             shutil.rmtree(path=path)
-            self._append_log(
-                f"No extra files exists, backup directory automatically deleted."
+            self._log_exporter.append_log(
+                f"No extra files exists, backup directory automatically deleted.",
+                silent=False,
             )
         except Exception as e:
-            self._append_log(f"Failed to delete directory({path}), error={str(e)}")
+            self._log_exporter.append_log(
+                f"Failed to delete directory({path}), error={str(e)}",
+                silent=False,
+            )
 
     def _get_dir_size(self, path: str) -> int:
         total = 0

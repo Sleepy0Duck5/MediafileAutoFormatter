@@ -22,12 +22,14 @@ from src.restructor.audio_track_changer import AudioTrackChanger
 from src.env_configs import EnvConfigs
 from src.errors import DirectoryNotFoundException
 from src.constants import FileType, Constants, Extensions
+from src.log_exporter import LogExporter
 
 
 class Restructor(metaclass=ABCMeta):
     def __init__(
         self,
         env_configs: EnvConfigs,
+        log_exporter: LogExporter,
         formatter: Formatter,
         audio_track_changer: AudioTrackChanger,
     ) -> None:
@@ -44,23 +46,24 @@ class GeneralRestructor(Restructor):
     def __init__(
         self,
         env_configs: EnvConfigs,
+        log_exporter: LogExporter,
         formatter: Formatter,
         audio_track_changer: AudioTrackChanger,
         subtitle_extractor: SubtitleExtractor,
         subtitle_converter: SubtitleConverter,
     ) -> None:
         self._env_configs = env_configs
+        self._log_exporter = log_exporter
         self._formatter = formatter
         self._audio_track_changer = audio_track_changer
         self._subtitle_extractor = subtitle_extractor
         self._subtitle_converter = subtitle_converter
-        self._log = ""
 
     def restruct(self, metadata: Metadata, target_path: str) -> Folder:
         if not os.path.exists(path=target_path):
             raise DirectoryNotFoundException
 
-        self._log += metadata.explain() + "\n"
+        self._log_exporter.append_log(metadata.explain())
 
         root_folder = self._create_new_root_folder(
             metadata=metadata, target_path=target_path
@@ -80,9 +83,7 @@ class GeneralRestructor(Restructor):
         return new_root_folder
 
     def _export_restruct_log(self, root_folder: Folder) -> None:
-        temp_file = tempfile.NamedTemporaryFile(delete=False)
-        temp_file.write(self._log.encode("utf-8"))
-        temp_file.flush()
+        exported_log_file_path = self._log_exporter.export_log()
 
         log_file_name = (
             f"MAF_Restruct_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.log"
@@ -90,18 +91,13 @@ class GeneralRestructor(Restructor):
         log_path = os.path.join(root_folder.get_absolute_path(), log_file_name)
         log_file = RestructedFile(
             absolute_path=log_path,
-            original_file=File(absolute_path=temp_file.name, file_type=FileType.EXTRA),
+            original_file=File(
+                absolute_path=exported_log_file_path, file_type=FileType.EXTRA
+            ),
         )
 
-        try:
-            os.chmod(temp_file.name, Constants.DEFAULT_PERMISSION_FOR_LOG_FILE)
-        except Exception as e:
-            logger.warning(
-                f"Failed to grant permission {Constants.DEFAULT_PERMISSION_FOR_LOG_FILE} to {temp_file.name}, error : {str(e)}"
-            )
-
         root_folder.append_struct(log_file)
-        self._log = ""
+        self._log_exporter.clear_log()
 
     def _restruct_subtitle(
         self,
@@ -134,7 +130,9 @@ class GeneralRestructor(Restructor):
 
         if len(subtitle_files) <= 0:
             logger.warning("Subtitle found but nothing selected")
-            self._log += "[WARNING] Subtitle found but nothing selected"
+            self._log_exporter.append_log(
+                "[WARNING] Subtitle found but nothing selected"
+            )
 
         return self._convert_subtitle(subtitle_files=subtitle_files)
 
@@ -156,14 +154,13 @@ class GeneralRestructor(Restructor):
                     logger.info(
                         f"smi subtitle converted into {self._env_configs._CONVERT_SMI_EXTENSION} : {subtitle_file.get_absolute_path()}"
                     )
-                    self._log += (
+                    self._log_exporter.append_log(
                         f"[CONVERTED] smi subtitle converted into {self._env_configs._CONVERT_SMI_EXTENSION} : {subtitle_file.get_absolute_path()}"
-                        + "\n"
                     )
                 except Exception as e:
                     error_msg = f"[WARNING] Failed to convert subtitle : {subtitle_file.get_absolute_path()}, error_msg={e}"
                     logger.opt(exception=e).warning(error_msg)
-                    self._log += error_msg
+                    self._log_exporter.append_log(error_msg)
                     result.append(subtitle_file)
             else:
                 result.append(subtitle_file)
@@ -220,7 +217,7 @@ class GeneralRestructor(Restructor):
         raise NotImplementedError
 
     def _append_restruct_log(self, struct: Structable):
-        self._log += struct.explain() + "\n"
+        self._log_exporter.append_log(struct.explain())
 
     def _append_struct_to_folder(self, folder: Folder, struct: Structable) -> None:
         folder.append_struct(struct=struct)

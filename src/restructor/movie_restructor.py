@@ -86,8 +86,9 @@ class MovieRestructor(GeneralRestructor):
                 folder=root_folder, struct=restructed_subtitle_file
             )
         except Exception as e:
-            logger.warning(f"Failed to rename subtitles : {str(e)}")
-            self._log += f"[WARNING] Failed to rename subtitles : {str(e)}"
+            self._log_exporter.append_log(
+                f"[WARNING] Failed to rename subtitles : {str(e)}", silent=False
+            )
 
     def _restruct_mediafile(
         self, root_folder: Folder, metadata: SubtitleContainingMetadata
@@ -95,7 +96,9 @@ class MovieRestructor(GeneralRestructor):
         media_file_names = {}
 
         for original_file in metadata.get_media_files():
-            new_title = self._formatter.rename_file(metadata=metadata, file=original_file)
+            new_title = self._formatter.rename_file(
+                metadata=metadata, file=original_file
+            )
             new_file_name = f"{new_title}.{original_file.get_extension()}"
 
             # Add index to file name if same media file name exists

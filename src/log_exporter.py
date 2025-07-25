@@ -1,15 +1,17 @@
 import os
 import traceback
-import datetime
+import tempfile
 
+from datetime import datetime
 from loguru import logger
+from typing import List
 
 from src.constants import Constants, Extensions
 
 
 class LogExporter:
     def __init__(self) -> None:
-        self._log = ""
+        self._logs: List[str] = []
 
     def export_traceback_as_file(self, source_path: str, target_path: str) -> None:
         try:
@@ -22,7 +24,7 @@ class LogExporter:
                 log_path, f"{Constants.ERROR_LOG_FILENAME}.{Extensions.LOG}"
             )
 
-            body = f"""Datetime : {datetime.datetime.now()}
+            body = f"""Datetime : {datetime.now()}
 Source Path : {source_path}
 Target Path : {target_path}
 Traceback : \n{traceback.format_exc()}
@@ -35,10 +37,35 @@ Traceback : \n{traceback.format_exc()}
                 file.write(body)
                 file.flush()
 
-            self._log = ""
+            self._logs = []
 
         except Exception as e:
             logger.opt(exception=e).error("Failed to export error log file")
 
-    def append_log(self, message: str):
-        self._log += message
+    def append_log(self, message: str, silent: bool = True):
+        if not silent:
+            if "warning" in message.lower():
+                logger.warning(message)
+            else:
+                logger.info(message)
+
+        self._logs.append(message + "\n")
+
+    def export_log(self) -> str:
+        log_file = tempfile.NamedTemporaryFile(delete=False)
+
+        for log in self._logs:
+            log_file.write(log.encode("utf-8"))
+        log_file.flush()
+
+        try:
+            os.chmod(log_file.name, Constants.DEFAULT_PERMISSION_FOR_LOG_FILE)
+        except Exception as e:
+            logger.warning(
+                f"Failed to grant permission {Constants.DEFAULT_PERMISSION_FOR_LOG_FILE} to {log_file.name}, error : {str(e)}"
+            )
+
+        return log_file.name
+
+    def clear_log(self) -> None:
+        self._logs = []

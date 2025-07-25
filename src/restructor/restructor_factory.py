@@ -13,6 +13,7 @@ from src.constants import MediaType, Extensions
 from src.errors import InvalidMediaTypeException, InvalidEnvConfig
 from src.env_configs import EnvConfigs
 from src.arguments import Arguments
+from src.log_exporter import LogExporter
 
 
 class RestructorFactory:
@@ -21,22 +22,26 @@ class RestructorFactory:
         env_configs: EnvConfigs,
         subtitle_extractor: SubtitleExtractor,
         arguments: Arguments,
+        log_exporter: LogExporter,
     ) -> None:
         self._env_configs = env_configs
         self._subtitle_extractor = subtitle_extractor
         self._arguments = arguments
+        self._log_exporter = log_exporter
 
     def create(self, media_type: MediaType) -> Restructor:
         subtitle_converter = self._get_subtitle_converter(
             self._env_configs._CONVERT_SMI_EXTENSION
         )
         audio_track_changer = AudioTrackChanger(
+            log_exporter=self._log_exporter,
             audio_track_langugage=self._arguments.mkv_audio_language,
         )
 
         if media_type == MediaType.MOVIE:
             return MovieRestructor(
                 env_configs=self._env_configs,
+                log_exporter=self._log_exporter,
                 formatter=MovieFormatter(env_configs=self._env_configs),
                 audio_track_changer=audio_track_changer,
                 subtitle_extractor=self._subtitle_extractor,
@@ -45,6 +50,7 @@ class RestructorFactory:
         elif media_type == MediaType.TV:
             return TVRestructor(
                 env_configs=self._env_configs,
+                log_exporter=self._log_exporter,
                 formatter=TVFormatter(env_configs=self._env_configs),
                 audio_track_changer=audio_track_changer,
                 subtitle_extractor=self._subtitle_extractor,
@@ -52,7 +58,7 @@ class RestructorFactory:
                 subtitle_analyzer=TVAnalyzer(
                     env_configs=self._env_configs,
                     mkv_subtitle_extractor=MkvSubtitleExtractor(
-                        env_configs=self._env_configs
+                        log_exporter=self._log_exporter, env_configs=self._env_configs
                     ),
                 ),
             )

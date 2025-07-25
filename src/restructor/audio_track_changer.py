@@ -6,10 +6,12 @@ from loguru import logger
 
 from src.model.file import File
 from src.constants import Extensions
+from src.log_exporter import LogExporter
 
 
 class AudioTrackChanger:
-    def __init__(self, audio_track_langugage: Optional[str]):
+    def __init__(self, log_exporter: LogExporter, audio_track_langugage: Optional[str]):
+        self._log_exporter = log_exporter
         self._audio_track_langugage = audio_track_langugage
 
     def change_audio_track(self, file: File) -> None:
@@ -56,8 +58,9 @@ class AudioTrackChanger:
             )
 
         except Exception as e:
-            logger.opt(exception=e).warning(
-                f"Failed to change default audio track, aborting file{file.get_absolute_path()}"
+            self._log_exporter.append_log(
+                f"Failed to change default audio track, aborting file{file.get_absolute_path()}, error={e}",
+                silent=False,
             )
             return
 
@@ -65,12 +68,14 @@ class AudioTrackChanger:
         try:
             shutil.move(src=output_file_path, dst=file.get_absolute_path())
         except Exception as e:
-            logger.opt(exception=e).warning(
-                f"Failed to replace audio changed mkv, aborting file {file.get_absolute_path()}"
+            self._log_exporter.append_log(
+                f"Failed to replace audio changed mkv, aborting file {file.get_absolute_path()}, error={e}",
+                silent=False,
             )
+            return
 
-        logger.info(
-            f"Default audio track changed into {new_default_audio_track.track_name} (filepath={file.get_absolute_path()})"
+        self._log_exporter.append_log(
+            f"[CHANGED] Default audio track changed into {new_default_audio_track.language}, {new_default_audio_track.track_name} (filepath={file.get_absolute_path()})"
         )
 
     def _find_default_tracks(

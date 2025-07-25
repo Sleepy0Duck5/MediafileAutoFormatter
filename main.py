@@ -26,20 +26,24 @@ if __name__ == "__main__":
 
     constructor = GeneralConstructor(env_configs=env_configs)
     log_exporter = LogExporter()
+    post_log_exporter = LogExporter()
 
     handler = Handler(
         constructor=constructor,
         media_type_analyzer=GeneralMediaTypeAnalyzer(
             env_configs=env_configs, metadata_reader=GenearlMetadataReader()
         ),
-        media_analyzer_factory=MediaAnalyzerFactory(env_configs=env_configs),
+        media_analyzer_factory=MediaAnalyzerFactory(
+            env_configs=env_configs, log_exporter=log_exporter
+        ),
         restructor_factory=RestructorFactory(
             env_configs=env_configs,
             subtitle_extractor=GeneralSubtitleExtractor(constrcutor=constructor),
             arguments=arguments,
+            log_exporter=log_exporter,
         ),
-        executor=GeneralExecutor(log_exporter=log_exporter),
-        log_exporter=log_exporter,
+        executor=GeneralExecutor(log_exporter=post_log_exporter),
+        log_exporter=post_log_exporter,
     )
 
     handler.process(

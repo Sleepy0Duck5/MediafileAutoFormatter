@@ -8,14 +8,13 @@ from src.model.file import File
 from src.model.structable import Structable
 from src.constants import Extensions, FileType
 from src.env_configs import EnvConfigs
+from src.log_exporter import LogExporter
 
 
 class MkvSubtitleExtractor:
-    def __init__(
-        self,
-        env_configs: EnvConfigs,
-    ) -> None:
+    def __init__(self, env_configs: EnvConfigs, log_exporter: LogExporter) -> None:
         self._env_configs = env_configs
+        self._log_exporter = log_exporter
 
     def extract_subtitle_file_from_mkv(
         self, media_files: List[File], subtitles: List[Structable]
@@ -31,7 +30,7 @@ class MkvSubtitleExtractor:
             if media_file.get_extension() != Extensions.MKV:
                 continue
             logger.info(
-                f"Extracting subtitle file from mkv media file {media_file.get_absolute_path()}"
+                f"Extracting subtitle file from mkv media file {media_file.get_absolute_path()}",
             )
             mkv_file_cnt += 1
 
@@ -50,7 +49,7 @@ class MkvSubtitleExtractor:
                 if not subtitle_type:
                     logger.info(
                         f"""Valid subtitle found, but cannot determine subtitle type (track_codec={track.track_codec}).
-                        Skiping extraction for ({media_file.get_absolute_path()})"""
+                        Skiping extraction for ({media_file.get_absolute_path()})""",
                     )
                     continue
 
@@ -67,17 +66,21 @@ class MkvSubtitleExtractor:
                         file_type=FileType.SUBTITLE,
                     )
                 )
-                logger.info(f"Subtitle {new_subtitle_file_path} extracted and created.")
+                self._log_exporter.append_log(
+                    f"[EXTRACTED] New Subtitle extracted from {media_file.get_absolute_path()}, subtitle {new_subtitle_file_path} created.",
+                    silent=False,
+                )
                 break
 
         if len(extracted_subtitles) == 0:
-            logger.info(
-                f"No subtitle extracted from mkv files(mkv_file_cnt={mkv_file_cnt})"
+            self._log_exporter.append_log(
+                f"[EXTRACTED] No subtitle extracted from mkv files(mkv_file_cnt={mkv_file_cnt})",
+                silent=False,
             )
             return []
 
         logger.info(
-            f"Total {len(extracted_subtitles)} subtitle files extracted from mkv files"
+            f"Total {len(extracted_subtitles)} subtitle files extracted from mkv files",
         )
 
         return extracted_subtitles

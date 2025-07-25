@@ -23,12 +23,14 @@ from src.restructor.audio_track_changer import AudioTrackChanger
 from src.analyzer.media_analyzer import TVAnalyzer
 from src.env_configs import EnvConfigs
 from src.constants import SeasonAlias
+from src.log_exporter import LogExporter
 
 
 class TVRestructor(GeneralRestructor):
     def __init__(
         self,
         env_configs: EnvConfigs,
+        log_exporter: LogExporter,
         formatter: TVFormatter,
         audio_track_changer: AudioTrackChanger,
         subtitle_extractor: SubtitleExtractor,
@@ -37,6 +39,7 @@ class TVRestructor(GeneralRestructor):
     ) -> None:
         super().__init__(
             env_configs,
+            log_exporter,
             formatter,
             audio_track_changer,
             subtitle_extractor,
@@ -53,7 +56,7 @@ class TVRestructor(GeneralRestructor):
 
         for index in seasons:
             season_metadata = seasons[index]
-            self._log += "\n" + season_metadata.explain() + "\n"
+            self._log_exporter.append_log(season_metadata.explain())
 
             season_folder = self._create_season_folder(
                 root_folder=root_folder, season_metadata=season_metadata
@@ -106,9 +109,9 @@ class TVRestructor(GeneralRestructor):
             original_subtitle_files.append(subtitles[0])
         else:
             if len(subtitles) != len(metadata.get_episode_files().keys()):
-                logger.warning("Subtitle file count is not same as episode files")
-                self._log += (
-                    "[WARNING] Subtitle file count is not same as episode files"
+                self._log_exporter.append_log(
+                    "[WARNING] Subtitle file count is not same as episode files",
+                    silent=False,
                 )
 
             subtitle_files = []
@@ -121,10 +124,10 @@ class TVRestructor(GeneralRestructor):
                 subtitle_files.extend(extracted_subtitle_files)
 
                 if len(extracted_subtitle_files) >= 2:
-                    logger.warning(
-                        "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated"
+                    self._log_exporter.append_log(
+                        "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated",
+                        silent=False,
                     )
-                    self._log += "[WARNING] Multiple subtitle extracted, subtitle file name can be duplicated"
 
         if subtitle_files:
             self._rename_subtitle_and_append(
@@ -190,8 +193,9 @@ class TVRestructor(GeneralRestructor):
                         folder=root_folder, struct=restructed_subtitle_file
                     )
         except Exception as e:
-            logger.warning(f"Failed to rename subtitles : {e}")
-            self._log += f"[WARNING] Failed to rename subtitles : {e}"
+            self._log_exporter.append_log(
+                f"[WARNING] Failed to rename subtitles : {e}", silent=False
+            )
 
     def _organaize_subtitles_by_episode(self, subtitle_files: List[File]) -> Dict:
         subtitles_by_episode = {}
