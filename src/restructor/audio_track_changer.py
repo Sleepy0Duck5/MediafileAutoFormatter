@@ -75,7 +75,8 @@ class AudioTrackChanger:
             return
 
         self._log_exporter.append_log(
-            f"[CHANGED] Default audio track changed into {new_default_audio_track.language}, {new_default_audio_track.track_name} (filepath={file.get_absolute_path()})"
+            f"[CHANGED] Default audio track changed into {new_default_audio_track.language}, {new_default_audio_track.track_name} (filepath={file.get_absolute_path()})",
+            silent=False,
         )
 
     def _find_default_tracks(
