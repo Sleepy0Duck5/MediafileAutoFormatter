@@ -1,6 +1,6 @@
-import shutil
+import subprocess
 
-from typing import Optional, Iterable, Tuple
+from typing import Optional, Iterable, List
 from pymkv import MKVFile, MKVTrack
 from loguru import logger
 
@@ -25,109 +25,87 @@ class AudioTrackChanger:
 
         mkv_file = MKVFile(file_path=file.get_absolute_path())
 
-        default_audio_track, new_default_audio_track = self._find_default_tracks(
-            mkv_file=mkv_file
-        )
+        audio_tracks = self._find_audio_tracks(mkv_file=mkv_file)
 
-        if default_audio_track and (
-            default_audio_track.language == self._audio_track_langugage
-        ):
-            logger.info(
-                f"Default audio track's lanuage is already {default_audio_track.language}({default_audio_track.track_name}), Skipping audio track change task..."
-            )
+        wanted_audio_track = self._find_wanted_language_audio_track(tracks=audio_tracks)
+
+        if not wanted_audio_track:
             return
-
-        if not new_default_audio_track:
-            logger.info(
-                "New default audio track not found, aborting change audio track..."
-            )
-            return
-
-        logger.info(
-            f"New default {new_default_audio_track.language} audio track found! ({new_default_audio_track.track_name})"
-        )
 
         try:
-            output_file_path = file.get_absolute_path() + "_audio_track_changed.mkv"
-
-            self._change_default_audio_track_flags_and_apply(
-                mkv_file=mkv_file,
-                default_audio_track=default_audio_track,
-                new_default_audio_track=new_default_audio_track,
-                output_file_path=output_file_path,
+            self._change_default_audio_track(
+                file_path=file.get_absolute_path(),
+                tracks=audio_tracks,
+                wanted_audio_track=wanted_audio_track,
             )
-
         except Exception as e:
             self._log_exporter.append_log(
                 f"Failed to change default audio track, aborting file{file.get_absolute_path()}, error={e}",
                 silent=False,
             )
-            return
-
-        # replace original mkv file
-        try:
-            shutil.move(src=output_file_path, dst=file.get_absolute_path())
-        except Exception as e:
-            self._log_exporter.append_log(
-                f"Failed to replace audio changed mkv, aborting file {file.get_absolute_path()}, error={e}",
-                silent=False,
-            )
+            # rollback?
             return
 
         self._log_exporter.append_log(
-            f"[CHANGED] Default audio track changed into {new_default_audio_track.language}, {new_default_audio_track.track_name} (filepath={file.get_absolute_path()})",
+            f"[CHANGED] Default audio track changed into {wanted_audio_track.language}, {wanted_audio_track.track_name} (filepath={file.get_absolute_path()})",
             silent=False,
         )
 
-    def _find_default_tracks(
-        self, mkv_file: MKVFile
-    ) -> Tuple[Optional[MKVTrack], Optional[MKVTrack]]:
+    def _find_audio_tracks(self, mkv_file: MKVFile) -> List[MKVTrack]:
         tracks = mkv_file.get_track()
         if not isinstance(tracks, Iterable):
             raise Exception("MKV File's tracks are not iterable")
 
-        default_audio_track = None
-        new_default_audio_track = None
+        audio_tracks = []
 
         for track in tracks:
             if not self._is_audio_track(track=track):
                 continue
 
-            if (track.default_track) and default_audio_track is None:
-                default_audio_track = track
+            audio_tracks.append(track)
 
-            if (
-                track.language == self._audio_track_langugage
-            ) and new_default_audio_track is None:
-                new_default_audio_track = track
-
-        return default_audio_track, new_default_audio_track
+        return audio_tracks
 
     def _is_audio_track(self, track: MKVTrack) -> bool:
         if not track.track_type:
             return False
         return track.track_type.lower().__contains__("audio")
 
-    def _change_default_audio_track_flags_and_apply(
-        self,
-        mkv_file: MKVFile,
-        default_audio_track: Optional[MKVTrack],
-        new_default_audio_track: MKVTrack,
-        output_file_path: str,
-    ) -> None:
-        if default_audio_track:
-            self._change_default_track_flag(
-                mkv_file=mkv_file, track=default_audio_track, default_track_flag=False
-            )
+    def _find_wanted_language_audio_track(
+        self, tracks: List[MKVTrack]
+    ) -> Optional[MKVTrack]:
+        for track in tracks:
+            if track.language != self._audio_track_langugage:
+                continue
 
-        self._change_default_track_flag(
-            mkv_file=mkv_file, track=new_default_audio_track, default_track_flag=True
+            if track.default_track:
+                logger.info(
+                    f"Default audio track's lanuage is already {track.language}({track.track_name}), Skipping audio track change task..."
+                )
+                return None
+
+            return track
+
+        logger.info(
+            f"Wanted language audio track not found, Skipping audio track change task..."
         )
+        return None
 
-        mkv_file.mux(output_path=output_file_path, silent=True)
-
-    def _change_default_track_flag(
-        self, mkv_file: MKVFile, track: MKVTrack, default_track_flag: bool
+    def _change_default_audio_track(
+        self,
+        file_path: str,
+        tracks: List[MKVTrack],
+        wanted_audio_track: MKVTrack,
     ) -> None:
-        track.default_track = default_track_flag
-        mkv_file.replace_track(track_num=track.track_id, track=track)
+        command = f'mkvpropedit -v "{file_path}" '
+
+        for idx, track in enumerate(tracks):
+            flag_default = "0"
+            if track == wanted_audio_track:
+                flag_default = "1"
+
+            command += f"--edit track:a{idx + 1} --set flag-default={flag_default} "
+
+        logger.info(f"mkvpropedit command: {command}")
+
+        subprocess.call(command)
