@@ -32,7 +32,7 @@ class Handler:
         try:
             source_path = arguments.source_path
             target_path = arguments.target_path
-            
+
             if not os.path.exists(source_path):
                 raise DirectoryNotFoundException(
                     f"Source directory not found : {source_path}"
