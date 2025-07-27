@@ -382,16 +382,15 @@ def smi2ass_internal(sln):
                 except:
                     col = None
                 if not col == None:
-                    hexcolor = re.search(
-                        "[0-9a-fA-F]{6}", color["color"].lower()
+                    hexcolor_regex = re.search(
+                        "[0-9a-fA-F]{6}", col.lower()
                     )  # bad cases : '23df34'
-                    if hexcolor is not None:
+                    if hexcolor_regex is not None:
+                        smi_hexcolor = hexcolor_regex.group(0)
+                        ass_hexcolor = convert_hexcolor(smi_hexcolor)
+
                         converted_color = (
-                            "{\\c&H"
-                            + hexcolor.group(0)[::-1]
-                            + "&}"
-                            + color.text
-                            + "{\\c}"
+                            "{\\c&H" + ass_hexcolor + "&}" + color.text + "{\\c}"
                         )
                     else:
                         try:
@@ -427,6 +426,17 @@ def smi2ass_internal(sln):
                 ass_lines.append(line)
 
     return ass_lines
+
+
+def convert_hexcolor(smi_hexcolor: str) -> str:
+    if len(smi_hexcolor) != 6:
+        return smi_hexcolor[::-1]
+    
+    r = smi_hexcolor[0:2]
+    g = smi_hexcolor[2:4]
+    b = smi_hexcolor[4:6]
+
+    return f"{b}{g}{r}"
 
 
 def ms2timecode(ms):
