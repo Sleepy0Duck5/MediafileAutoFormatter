@@ -394,11 +394,17 @@ def smi2ass_internal(sln):
                         )
                     else:
                         try:
+                            # e.g. #808080
+                            smi_hexcolor = css3_names_to_hex[color["color"].lower()]
+                            if len(smi_hexcolor) == 7:
+                                ass_hexcolor = convert_hexcolor(smi_hexcolor[1:]) + "&}"
+                            else:
+                                ass_hexcolor = css3_names_to_hex[
+                                    color["color"].lower()
+                                ][::-1].replace("#", "&}")
                             converted_color = (
                                 "{\\c&H"
-                                + css3_names_to_hex[color["color"].lower()][
-                                    ::-1
-                                ].replace("#", "&}")
+                                + ass_hexcolor
                                 + color.text
                                 + "{\\c}"
                             )
@@ -431,7 +437,7 @@ def smi2ass_internal(sln):
 def convert_hexcolor(smi_hexcolor: str) -> str:
     if len(smi_hexcolor) != 6:
         return smi_hexcolor[::-1]
-    
+
     r = smi_hexcolor[0:2]
     g = smi_hexcolor[2:4]
     b = smi_hexcolor[4:6]
