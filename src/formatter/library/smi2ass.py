@@ -38,7 +38,7 @@ else:
     print("version 3.x needed")
 
 default_lang_code = "kor"
-default_font_name = "arial"
+default_font_name = "맑은 고딕"
 
 # lang class for multiple language subtitle
 langCode = {
