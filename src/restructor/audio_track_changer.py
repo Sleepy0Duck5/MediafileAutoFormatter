@@ -26,6 +26,11 @@ class AudioTrackChanger:
         mkv_file = MKVFile(file_path=file.get_absolute_path())
 
         audio_tracks = self._find_audio_tracks(mkv_file=mkv_file)
+        if len(audio_tracks) <= 1:
+            logger.info(
+                f"Additional audio track not found. Skipping change audio track..."
+            )
+            return
 
         wanted_audio_track = self._find_wanted_language_audio_track(tracks=audio_tracks)
 
