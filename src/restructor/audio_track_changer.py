@@ -105,14 +105,16 @@ class AudioTrackChanger:
         args = ["mkvpropedit", "-v", file_path]
 
         for idx, track in enumerate(tracks):
-            flag_default = "0"
+            enabled = "0"
             if track == wanted_audio_track:
-                flag_default = "1"
+                enabled = "1"
 
             args.append("--edit")
             args.append(f"track:a{idx + 1}")
             args.append(f"--set")
-            args.append(f"flag-default={flag_default}")
+            args.append(f"flag-default={enabled}")
+            args.append(f"--set")
+            args.append(f"flag-enabled={enabled}")
 
         command = " ".join(args)
         logger.info(f"mkvpropedit command: {command}")
