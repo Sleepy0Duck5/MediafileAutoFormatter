@@ -77,7 +77,7 @@ styles = (
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Default,"""
     + default_font_name
-    + """,22,&H00ffffff,&H0000ffff,&H00000000,&H80000000,0,0,0,0,100,100,0,0.00,1,1,1,2,20,20,20,1
+    + """,22,&H00FFFFFF,&H0300FFFF,&H00000000,&H02000000,-1,0,0,0,100,100,0,0,1,3,0,2,20,20,20,1
 
 """
 )
@@ -403,10 +403,7 @@ def smi2ass_internal(sln):
                                     color["color"].lower()
                                 ][::-1].replace("#", "&}")
                             converted_color = (
-                                "{\\c&H"
-                                + ass_hexcolor
-                                + color.text
-                                + "{\\c}"
+                                "{\\c&H" + ass_hexcolor + color.text + "{\\c}"
                             )
                         except:  # bad cases : 'skybule'
                             converted_color = color.text
