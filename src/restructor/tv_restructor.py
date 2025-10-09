@@ -145,10 +145,6 @@ class TVRestructor(GeneralRestructor):
         self, root_folder: Folder, metadata: SeasonMetadata, subtitle_files: List[File]
     ) -> None:
         try:
-            episodes = metadata.get_episode_files()
-            if len(episodes) <= 0:
-                raise NoMeidaFileException
-
             subtitles_by_episode = self._organaize_subtitles_by_episode(
                 subtitle_files=subtitle_files
             )
