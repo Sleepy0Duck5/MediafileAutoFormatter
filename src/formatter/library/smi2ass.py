@@ -65,8 +65,8 @@ script_info = """[Script Info]
 ;Converted by smi2ass
 ScriptType: v4.00+
 Collisions: Normal
-PlayResX: 384
-PlayResY: 288
+PlayResX: 1920
+PlayResY: 1080
 Timer: 100.0000
 
 """
@@ -77,7 +77,7 @@ styles = (
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Default,"""
     + default_font_name
-    + """,22,&H00FFFFFF,&H0300FFFF,&H00000000,&H02000000,-1,0,0,0,100,100,0,0,1,3,0,2,20,20,20,1
+    + """,66,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,3,3,2,75,75,75,1
 
 """
 )
