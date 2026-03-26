@@ -27,7 +27,7 @@ class SubtitleTranslator:
         original_path = subtitle_file.get_absolute_path()
         file_ext = subtitle_file.get_extension()
         base_name = original_path[: -(len(file_ext) + 1)]
-        output_path = f"{base_name}.kor.{file_ext}"
+        output_path = f"{base_name}.ko.{file_ext}"
 
         logger.info(f"Starting translation for {original_path} using llm-subtrans as a python module...")
         
@@ -55,7 +55,7 @@ class SubtitleTranslator:
                 instruction=None,
                 instructionfile=instruction_file_path,
                 matchpartialwords=False,
-                maxbatchsize=50,
+                maxbatchsize=40,
                 maxsummaries=None,
                 maxlines=None,
                 minbatchsize=5,
