@@ -32,9 +32,14 @@ class SubtitleTranslator:
         logger.info(f"Starting translation for {original_path} using llm-subtrans as a python module...")
         
         try:
-            from scripts.subtrans_common import CreateOptions, CreateProject, LogTranslationStatus
+            from scripts.subtrans_common import CreateOptions, CreateProject, LogTranslationStatus, InitLogger
             from PySubtrans import init_translator
             from argparse import Namespace
+            
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            instruction_file_path = os.path.join(
+                project_root, "resources", "translator", "instructions.txt"
+            )
             
             args = Namespace(
                 input=original_path,
@@ -48,12 +53,12 @@ class SubtitleTranslator:
                 includeoriginal=False,
                 addrtlmarkers=False,
                 instruction=None,
-                instructionfile=None,
+                instructionfile=instruction_file_path,
                 matchpartialwords=False,
-                maxbatchsize=None,
+                maxbatchsize=50,
                 maxsummaries=None,
                 maxlines=None,
-                minbatchsize=None,
+                minbatchsize=5,
                 moviename=None,
                 name=None,
                 names=None,
@@ -77,6 +82,8 @@ class SubtitleTranslator:
                 debug=False,
                 list_formats=False
             )
+
+            # InitLogger("llm-subtrans", args.debug)
 
             provider = "Custom Server" if args.server else "OpenRouter"
             
