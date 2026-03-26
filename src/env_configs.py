@@ -44,6 +44,10 @@ class EnvConfigs:
             )
             == "True"
         )
+        self.TRANSLATION_TARGET_LANGUAGE = os.getenv(
+            "TRANSLATION_TARGET_LANGUAGE",
+            DefaultEnvConifgs.TRANSLATION_TARGET_LANGUAGE,
+        )
         self.TRANSLATION_SERVER_ADDRESS = os.getenv(
             "TRANSLATION_SERVER_ADDRESS",
             DefaultEnvConifgs.TRANSLATION_SERVER_ADDRESS,

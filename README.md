@@ -24,6 +24,7 @@ SUBTITLE_EXTENSIONS : 설정된 확장자를 자막 파일로 인식합니다.
 # Translation (llm-subtrans 기반 LLM 번역)
 MKV_SUBTITLE_FALLBACK_LANGUAGE : 추출을 시도할 대체 언어를 리스트 형식으로 순서대로 설정합니다 (예: '["jpn", "eng"]').
 ENABLE_SUBTITLE_TRANSLATION : 폴백 언어로 추출된 자막을 자동으로 번역할지 여부를 설정합니다 (True/False).
+TRANSLATION_TARGET_LANGUAGE : 번역 결과물로 출력할 최종 언어의 이름을 입력합니다 (예: Korean, English).
 TRANSLATION_SERVER_ADDRESS : OpenAI API와 규격이 호환되는 LLM 서버 주소를 입력합니다 (ex. http://localhost:11434).
 TRANSLATION_ENDPOINT : API 엔드포인트 경로입니다 (ex. /v1/chat/completions).
 TRANSLATION_API_KEY : LLM 서버 API 호출에 필요한 키입니다. 로컬 서버일 경우 빈 값일 수 있습니다.

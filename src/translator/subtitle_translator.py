@@ -29,36 +29,91 @@ class SubtitleTranslator:
         base_name = original_path[: -(len(file_ext) + 1)]
         output_path = f"{base_name}.kor.{file_ext}"
 
-        args = ["llm-subtrans", "-l", "Korean", "-o", output_path]
-
-        if self._env_configs.TRANSLATION_SERVER_ADDRESS:
-            args.extend(["-s", self._env_configs.TRANSLATION_SERVER_ADDRESS])
-        if self._env_configs.TRANSLATION_ENDPOINT:
-            args.extend(["-e", self._env_configs.TRANSLATION_ENDPOINT])
-        if self._env_configs.TRANSLATION_API_KEY:
-            args.extend(["-k", self._env_configs.TRANSLATION_API_KEY])
-        if self._env_configs.TRANSLATION_MODEL:
-            args.extend(["--model", self._env_configs.TRANSLATION_MODEL])
-
-        args.append(original_path)
-
-        logger.info(f"Starting translation for {original_path} using llm-subtrans...")
-        
-        # Resolve llm-subtrans path in .venv/Scripts
-        script_path = os.path.join(os.path.dirname(sys.executable), "llm-subtrans.exe")
-        if not os.path.exists(script_path):
-            script_path = os.path.join(os.path.dirname(sys.executable), "llm-subtrans")
-        
-        if os.path.exists(script_path):
-            args[0] = script_path
+        logger.info(f"Starting translation for {original_path} using llm-subtrans as a python module...")
         
         try:
-            result = subprocess.run(args, capture_output=True, text=True, check=True)
+            from scripts.subtrans_common import CreateOptions, CreateProject, LogTranslationStatus
+            from PySubtrans import init_translator
+            from argparse import Namespace
+            
+            args = Namespace(
+                input=original_path,
+                output=output_path,
+                target_language=self._env_configs.TRANSLATION_TARGET_LANGUAGE,
+                apikey=self._env_configs.TRANSLATION_API_KEY,
+                server=self._env_configs.TRANSLATION_SERVER_ADDRESS,
+                endpoint=self._env_configs.TRANSLATION_ENDPOINT,
+                model=self._env_configs.TRANSLATION_MODEL,
+                description=None,
+                includeoriginal=False,
+                addrtlmarkers=False,
+                instruction=None,
+                instructionfile=None,
+                matchpartialwords=False,
+                maxbatchsize=None,
+                maxsummaries=None,
+                maxlines=None,
+                minbatchsize=None,
+                moviename=None,
+                name=None,
+                names=None,
+                postprocess=False,
+                preprocess=False,
+                project=False,
+                preview=False,
+                reparse=False,
+                retranslate=False,
+                reload=False,
+                ratelimit=None,
+                proxy=None,
+                proxycert=None,
+                scenethreshold=None,
+                substitution=None,
+                temperature=0.0,
+                writebackup=False,
+                chat=True,             # Enable chat format for general APIs
+                systemmessages=False,  
+                auto=False,
+                debug=False,
+                list_formats=False
+            )
+
+            provider = "Custom Server" if args.server else "OpenRouter"
+            
+            if provider == "OpenRouter":
+                options = CreateOptions(args, provider, api_key=args.apikey, model=args.model, use_default_model=args.auto)
+            else:
+                options = CreateOptions(
+                    args,
+                    provider,
+                    api_key=args.apikey,
+                    endpoint=args.endpoint,
+                    model=args.model,
+                    server_address=args.server,
+                    supports_conversation=args.chat,
+                    supports_system_messages=args.systemmessages,
+                )
+            
+            project = CreateProject(options, args)
+            translator = init_translator(options)
+            
+            project.TranslateSubtitles(translator)
+            
+            if project.use_project_file:
+                project.UpdateProjectFile()
+
+            LogTranslationStatus(project, preview=args.preview)
+            
             logger.info(f"Translation completed for {output_path}")
-            return output_path
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to translate subtitle: {e.stderr}")
+            
+            gen_path = getattr(project.subtitles, 'outputpath', output_path)
+            if gen_path and os.path.exists(gen_path):
+                return gen_path
+            elif os.path.exists(output_path):
+                return output_path
+                
             return original_path
+
         except Exception as ex:
             logger.error(f"Failed to translate subtitle: {ex}")
             return original_path

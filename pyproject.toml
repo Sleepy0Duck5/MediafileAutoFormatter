@@ -17,4 +17,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-llm-subtrans = { git = "https://github.com/machinewrapped/llm-subtrans.git" }
+llm-subtrans = { git = "https://github.com/machinewrapped/llm-subtrans.git", rev = "2b9357c9186501cf77324472607bd3615b826f0c" }

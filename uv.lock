@@ -319,7 +319,7 @@ wheels = [
 [[package]]
 name = "llm-subtrans"
 version = "1.5.9"
-source = { git = "https://github.com/machinewrapped/llm-subtrans.git#2b9357c9186501cf77324472607bd3615b826f0c" }
+source = { git = "https://github.com/machinewrapped/llm-subtrans.git?rev=2b9357c9186501cf77324472607bd3615b826f0c#2b9357c9186501cf77324472607bd3615b826f0c" }
 dependencies = [
     { name = "appdirs" },
     { name = "babel" },
@@ -367,7 +367,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.13.4" },
     { name = "black", specifier = ">=25.1.0" },
     { name = "chardet", specifier = ">=5.2.0" },
-    { name = "llm-subtrans", git = "https://github.com/machinewrapped/llm-subtrans.git" },
+    { name = "llm-subtrans", git = "https://github.com/machinewrapped/llm-subtrans.git?rev=2b9357c9186501cf77324472607bd3615b826f0c" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "patool", specifier = ">=4.0.1" },
     { name = "pymkv2", specifier = ">=2.1.1" },

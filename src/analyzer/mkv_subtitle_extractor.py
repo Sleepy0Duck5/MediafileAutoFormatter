@@ -30,10 +30,22 @@ class MkvSubtitleExtractor:
                 f"Extracting subtitle file from mkv media file {media_file.get_absolute_path()}",
             )
             has_external_sub = False
+            import difflib
+            import re
             for sub in subtitles:
                 if isinstance(sub, File):
-                    # Basic matching heuristic
-                    if media_file.get_title() in sub.get_title() or sub.get_title() in media_file.get_title():
+                    media_title = media_file.get_title()
+                    sub_title = sub.get_title()
+                    
+                    if media_title in sub_title or sub_title in media_title:
+                        has_external_sub = True
+                        break
+                    
+                    media_nums = set(re.findall(r'\d+', media_title))
+                    sub_nums = set(re.findall(r'\d+', sub_title))
+                    ratio = difflib.SequenceMatcher(None, media_title, sub_title).ratio()
+                    
+                    if ratio > 0.55 and media_nums.intersection(sub_nums):
                         has_external_sub = True
                         break
             
@@ -113,6 +125,10 @@ class MkvSubtitleExtractor:
                     )
                 except Exception as e:
                     logger.error(f"Failed to translate subtitle {new_subtitle_file_path}: {e}")
+                    self._log_exporter.append_log(
+                        f"[TRANSLATION_FAILED] Failed to translate {new_subtitle_file_path}: {e}",
+                        silent=False,
+                    )
 
             extracted_subtitles.append(extracted_file)
 
