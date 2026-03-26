@@ -21,6 +21,14 @@ CONVERT_SMI : SMI 파일을 다른 확장자로 변환합니다.
 CONVERT_SMI_EXTENSION : SMI 파일을 어떤 확장자로 변환할지 결정합니다. CONVERT_SMI 옵션이 True 일 때 동작합니다. (ex. srt, ass)
 SUBTITLE_EXTENSIONS : 설정된 확장자를 자막 파일로 인식합니다.
 
+# Translation (llm-subtrans 기반 LLM 번역)
+MKV_SUBTITLE_FALLBACK_LANGUAGE : 추출을 시도할 대체 언어를 리스트 형식으로 순서대로 설정합니다 (예: '["jpn", "eng"]').
+ENABLE_SUBTITLE_TRANSLATION : 폴백 언어로 추출된 자막을 자동으로 번역할지 여부를 설정합니다 (True/False).
+TRANSLATION_SERVER_ADDRESS : OpenAI API와 규격이 호환되는 LLM 서버 주소를 입력합니다 (ex. http://localhost:11434).
+TRANSLATION_ENDPOINT : API 엔드포인트 경로입니다 (ex. /v1/chat/completions).
+TRANSLATION_API_KEY : LLM 서버 API 호출에 필요한 키입니다. 로컬 서버일 경우 빈 값일 수 있습니다.
+TRANSLATION_MODEL : 번역에 사용할 LLM 모델의 이름입니다 (ex. gpt-4o-mini).
+
 # Season File format
 FILENAME_FORMAT : 파일 이름의 포맷을 설정합니다. {{ title }}, {{ season_number }}, {{ episode_number }} 는 반드시 포함되어야 합니다.
 SEASON_NUMBER_DIGIT : 시즌 숫자를 포맷할 때 몇자리 수로 할 것인지를 설정합니다. (ex. 2 -> 01, 02, 03, ...)
@@ -30,6 +38,11 @@ EPISODE_NUMBER_DIGIT : 에피소드 숫자를 포맷할 때 몇자리 수로 할
 EXPORT_DEBUG_LOG_FILE : 프로그램 실행 경로에 로그 파일을 남깁니다.
 ```
 
+## 자막 개별 추출 및 번역 (Fallback 지원)
+미디어 폴더 내에 이미 외부 자막 파일이 일부 존재하더라도, 매칭되는 자막이 없는 **각 개별 영상(MKV)마다 누락 여부를 확인하여 내부 자막을 추출**합니다.
+1. `MKV_SUBTITLE_EXTRACTION_LANGUAGE`로 설정된 주 언어(예: 한국어) 트랙을 우선적으로 찾아 추출합니다.
+2. 발견되지 않을 경우, `MKV_SUBTITLE_FALLBACK_LANGUAGE`로 설정된 백업 언어(예: 영어) 트랙을 찾아 추출합니다.
+3. `ENABLE_SUBTITLE_TRANSLATION`이 `True`일 경우, 추출된 폴백 자막을 지정된 LLM 모델(`llm-subtrans` 사용)을 거쳐 주 언어로 자동 번역하여 함께 저장합니다.
 
 # How to run
 

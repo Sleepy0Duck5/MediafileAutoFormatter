@@ -29,6 +29,37 @@ class EnvConfigs:
             "MKV_SUBTITLE_EXTRACTION_LANGUAGE",
             DefaultEnvConifgs.MKV_SUBTITLE_EXTRACTION_LANGUAGE,
         )
+        fallback_lang = os.getenv(
+            "MKV_SUBTITLE_FALLBACK_LANGUAGE",
+            DefaultEnvConifgs.MKV_SUBTITLE_FALLBACK_LANGUAGE,
+        )
+        try:
+            self.MKV_SUBTITLE_FALLBACK_LANGUAGE = json.loads(fallback_lang)
+        except Exception:
+            self.MKV_SUBTITLE_FALLBACK_LANGUAGE = [fallback_lang]
+        self.ENABLE_SUBTITLE_TRANSLATION = (
+            os.getenv(
+                "ENABLE_SUBTITLE_TRANSLATION",
+                DefaultEnvConifgs.ENABLE_SUBTITLE_TRANSLATION,
+            )
+            == "True"
+        )
+        self.TRANSLATION_SERVER_ADDRESS = os.getenv(
+            "TRANSLATION_SERVER_ADDRESS",
+            DefaultEnvConifgs.TRANSLATION_SERVER_ADDRESS,
+        )
+        self.TRANSLATION_ENDPOINT = os.getenv(
+            "TRANSLATION_ENDPOINT",
+            DefaultEnvConifgs.TRANSLATION_ENDPOINT,
+        )
+        self.TRANSLATION_API_KEY = os.getenv(
+            "TRANSLATION_API_KEY",
+            DefaultEnvConifgs.TRANSLATION_API_KEY,
+        )
+        self.TRANSLATION_MODEL = os.getenv(
+            "TRANSLATION_MODEL",
+            DefaultEnvConifgs.TRANSLATION_MODEL,
+        )
         self._CONVERT_SMI = (
             os.getenv(
                 "CONVERT_SMI",
