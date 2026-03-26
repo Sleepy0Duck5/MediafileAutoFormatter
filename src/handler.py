@@ -38,9 +38,7 @@ class Handler:
                     f"Source directory not found : {source_path}"
                 )
             if not os.path.exists(target_path):
-                raise DirectoryNotFoundException(
-                    f"Target directory not found : {target_path}"
-                )
+                os.makedirs(target_path, exist_ok=True)
 
             if not arguments.multiple:
                 self._process_media(source_path=source_path, target_path=target_path)
