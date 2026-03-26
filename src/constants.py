@@ -47,6 +47,13 @@ class DefaultEnvConifgs:
     MEDIA_EXTENSIONS = '["avi", "mp4", "mkv"]'
     SUBTITLE_SUFFIX = "ko"
     MKV_SUBTITLE_EXTRACTION_LANGUAGE = "kor"
+    MKV_SUBTITLE_FALLBACK_LANGUAGE = '["jpn", "eng"]'
+    ENABLE_SUBTITLE_TRANSLATION = "True"
+    TRANSLATION_TARGET_LANGUAGE = "Korean"
+    TRANSLATION_SERVER_ADDRESS = ""
+    TRANSLATION_ENDPOINT = ""
+    TRANSLATION_API_KEY = ""
+    TRANSLATION_MODEL = ""
     CONVERT_SMI = "True"
     CONVERT_SMI_EXTENSION = "ass"
     SUBTITLE_EXTENSIONS = '["smi", "ass", "srt"]'

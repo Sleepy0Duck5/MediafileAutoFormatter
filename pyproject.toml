@@ -8,9 +8,13 @@ dependencies = [
     "beautifulsoup4>=4.13.4",
     "black>=25.1.0",
     "chardet>=5.2.0",
+    "llm-subtrans",
     "loguru>=0.7.3",
     "patool>=4.0.1",
     "pymkv2>=2.1.1",
     "python-dotenv>=1.1.1",
     "uv>=0.8.0",
 ]
+
+[tool.uv.sources]
+llm-subtrans = { git = "https://github.com/machinewrapped/llm-subtrans.git", rev = "2b9357c9186501cf77324472607bd3615b826f0c" }

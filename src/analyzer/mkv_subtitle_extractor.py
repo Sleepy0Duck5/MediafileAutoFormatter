@@ -19,10 +19,7 @@ class MkvSubtitleExtractor:
     def extract_subtitle_file_from_mkv(
         self, media_files: List[File], subtitles: List[Structable]
     ) -> List[Structable]:
-        """Try to extract subtitle from mkv file when subtitle file not found in directory."""
-        if len(subtitles) > 0:
-            return subtitles
-
+        """Try to extract subtitle from mkv file when subtitle file not found for a specific media file."""
         extracted_subtitles = []
         mkv_file_cnt = 0
 
@@ -32,6 +29,30 @@ class MkvSubtitleExtractor:
             logger.info(
                 f"Extracting subtitle file from mkv media file {media_file.get_absolute_path()}",
             )
+            has_external_sub = False
+            import difflib
+            import re
+            for sub in subtitles:
+                if isinstance(sub, File):
+                    media_title = media_file.get_title()
+                    sub_title = sub.get_title()
+                    
+                    if media_title in sub_title or sub_title in media_title:
+                        has_external_sub = True
+                        break
+                    
+                    media_nums = set(re.findall(r'\d+', media_title))
+                    sub_nums = set(re.findall(r'\d+', sub_title))
+                    ratio = difflib.SequenceMatcher(None, media_title, sub_title).ratio()
+                    
+                    if ratio > 0.55 and media_nums.intersection(sub_nums):
+                        has_external_sub = True
+                        break
+            
+            if has_external_sub:
+                logger.info(f"Skipping MKV extraction for {media_file.get_absolute_path()} as an external subtitle seems to exist.")
+                continue
+
             mkv_file_cnt += 1
 
             mkv_file = MKVFile(
@@ -41,55 +62,99 @@ class MkvSubtitleExtractor:
             if not isinstance(tracks, Iterable):
                 raise Exception("MKV File's tracks are not iterable")
 
+            # First pass: try to find primary language track
+            target_track = None
+            is_fallback = False
+
             for track in tracks:
-                if not self._validate_subtitle_track(track=track):
-                    continue
+                if self._validate_subtitle_track(track=track, lang=self._env_configs.MKV_SUBTITLE_EXTRACTION_LANGUAGE):
+                    target_track = track
+                    break
+            
+            # Second pass: try to find fallback language track if primary not found
+            fallback_langs = getattr(self._env_configs, "MKV_SUBTITLE_FALLBACK_LANGUAGE", [])
+            if not isinstance(fallback_langs, list):
+                fallback_langs = [fallback_langs]
 
-                subtitle_type = self._get_subtitle_type(track_codec=track.track_codec)
-                if not subtitle_type:
-                    logger.info(
-                        f"""Valid subtitle found, but cannot determine subtitle type (track_codec={track.track_codec}).
-                        Skiping extraction for ({media_file.get_absolute_path()})""",
-                    )
-                    continue
+            if not target_track and fallback_langs:
+                for fallback_lang in fallback_langs:
+                    for track in tracks:
+                        if self._validate_subtitle_track(track=track, lang=fallback_lang):
+                            target_track = track
+                            is_fallback = True
+                            break
+                    if target_track:
+                        break
+            
+            if not target_track:
+                continue
 
-                new_subtitle_file_path = (
-                    f"{media_file.get_absolute_path()}.extractedsub.{subtitle_type}"
+            subtitle_type = self._get_subtitle_type(track_codec=target_track.track_codec)
+            if not subtitle_type:
+                logger.info(
+                    f"""Valid subtitle found, but cannot determine subtitle type (track_codec={target_track.track_codec}).
+                    Skiping extraction for ({media_file.get_absolute_path()})""",
                 )
+                continue
 
-                extracted_subtitle_path = track.extract()
+            new_subtitle_file_path = (
+                f"{media_file.get_absolute_path()}.extractedsub.{subtitle_type}"
+            )
 
-                os.rename(extracted_subtitle_path, new_subtitle_file_path)
-                extracted_subtitles.append(
-                    File(
-                        absolute_path=new_subtitle_file_path,
+            extracted_subtitle_path = target_track.extract()
+            os.rename(extracted_subtitle_path, new_subtitle_file_path)
+            
+            extracted_file = File(
+                absolute_path=new_subtitle_file_path,
+                file_type=FileType.SUBTITLE,
+            )
+
+            if is_fallback and getattr(self._env_configs, "ENABLE_SUBTITLE_TRANSLATION", False):
+                from src.translator.subtitle_translator import SubtitleTranslator
+                translator = SubtitleTranslator(env_configs=self._env_configs)
+                try:
+                    translated_path = translator.translate_subtitle(extracted_file)
+                    # Use the translated file for restructuring
+                    extracted_file = File(
+                        absolute_path=translated_path,
                         file_type=FileType.SUBTITLE,
                     )
-                )
-                self._log_exporter.append_log(
-                    f"[EXTRACTED] New Subtitle extracted from {media_file.get_absolute_path()}, subtitle {new_subtitle_file_path} created.",
-                    silent=False,
-                )
-                break
+                    self._log_exporter.append_log(
+                        f"[TRANSLATED] Fallback subtitle translated and saved to {translated_path}.",
+                        silent=False,
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to translate subtitle {new_subtitle_file_path}: {e}")
+                    self._log_exporter.append_log(
+                        f"[TRANSLATION_FAILED] Failed to translate {new_subtitle_file_path}: {e}",
+                        silent=False,
+                    )
+
+            extracted_subtitles.append(extracted_file)
+
+            self._log_exporter.append_log(
+                f"[EXTRACTED] New Subtitle extracted from {media_file.get_absolute_path()}, subtitle {extracted_file.get_absolute_path()} created.",
+                silent=False,
+            )
 
         if len(extracted_subtitles) == 0:
             self._log_exporter.append_log(
                 f"[EXTRACTED] No subtitle extracted from mkv files(mkv_file_cnt={mkv_file_cnt})",
                 silent=False,
             )
-            return []
+            return subtitles + extracted_subtitles
 
         logger.info(
             f"Total {len(extracted_subtitles)} subtitle files extracted from mkv files",
         )
 
-        return extracted_subtitles
+        return subtitles + extracted_subtitles
 
-    def _validate_subtitle_track(self, track: MKVTrack) -> bool:
+    def _validate_subtitle_track(self, track: MKVTrack, lang: str) -> bool:
         if not self._is_subtitle_track(track=track):
             return False
 
-        if track.language != self._env_configs.MKV_SUBTITLE_EXTRACTION_LANGUAGE:
+        if track.language != lang:
             return False
 
         return True
