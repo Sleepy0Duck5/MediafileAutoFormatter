@@ -29,29 +29,6 @@ class MkvSubtitleExtractor:
             logger.info(
                 f"Extracting subtitle file from mkv media file {media_file.get_absolute_path()}",
             )
-            has_external_sub = False
-            import difflib
-            import re
-            for sub in subtitles:
-                if isinstance(sub, File):
-                    media_title = media_file.get_title()
-                    sub_title = sub.get_title()
-                    
-                    if media_title in sub_title or sub_title in media_title:
-                        has_external_sub = True
-                        break
-                    
-                    media_nums = set(re.findall(r'\d+', media_title))
-                    sub_nums = set(re.findall(r'\d+', sub_title))
-                    ratio = difflib.SequenceMatcher(None, media_title, sub_title).ratio()
-                    
-                    if ratio > 0.55 and media_nums.intersection(sub_nums):
-                        has_external_sub = True
-                        break
-            
-            if has_external_sub:
-                logger.info(f"Skipping MKV extraction for {media_file.get_absolute_path()} as an external subtitle seems to exist.")
-                continue
 
             mkv_file_cnt += 1
 

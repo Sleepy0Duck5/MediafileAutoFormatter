@@ -154,10 +154,16 @@ class MovieAnalyzer(GeneralMediaAnalyzer):
 
         media_files = self._get_media_files(root=builder.get_media_root())
         builder.set_media_files(media_files=media_files)
+        
+        # Movies typically have a 1:1 mapping between media and subtitle files in the folder.
+        # If there's an external subtitle found, we skip MKV extraction entirely for movies.
+        missing_media_files = media_files if not subtitles else []
 
-        subtitles = self._mkv_subtitle_extractor.extract_subtitle_file_from_mkv(
-            media_files=media_files, subtitles=subtitles
+        extracted_subtitles = self._mkv_subtitle_extractor.extract_subtitle_file_from_mkv(
+            media_files=missing_media_files, subtitles=[]
         )
+        
+        subtitles.extend(extracted_subtitles)
         builder.set_subtitles(subtitles=subtitles)
 
     def _find_media_root(self, root: Folder) -> Folder:
@@ -345,9 +351,33 @@ class TVAnalyzer(GeneralMediaAnalyzer):
     ) -> SeasonMetadata:
         subtitles = self._analyze_subtitles(root=root)
         media_files = self._get_media_files(root=root)
-        subtitles = self._mkv_subtitle_extractor.extract_subtitle_file_from_mkv(
-            media_files=media_files, subtitles=subtitles
+        
+        episode_files = self._get_episodes(media_files)
+        
+        subtitle_episodes = set()
+        sub_files = [s for s in subtitles if isinstance(s, File)]
+        
+        if sub_files:
+            subtitle_file_prefix = self._get_file_name_prefix(files=sub_files)
+            for sub_file in sub_files:
+                try:
+                    ep_idx = self._extract_episode_index_from_file_name(
+                        file_name=sub_file.get_title(), prefix=subtitle_file_prefix
+                    )
+                    subtitle_episodes.add(ep_idx)
+                except EpisodeIndexNotFoundException:
+                    pass
+
+        missing_media_files = []
+        for ep_idx, media_file in episode_files.items():
+            if ep_idx not in subtitle_episodes:
+                missing_media_files.append(media_file)
+
+        extracted_subtitles = self._mkv_subtitle_extractor.extract_subtitle_file_from_mkv(
+            media_files=missing_media_files, subtitles=[]
         )
+        
+        subtitles.extend(extracted_subtitles)
 
         return SeasonMetadata(
             title=builder.get_title(),
@@ -357,5 +387,5 @@ class TVAnalyzer(GeneralMediaAnalyzer):
             media_files=media_files,
             subtitles=subtitles,
             season_index=season_index,
-            episode_files=self._get_episodes(media_files),
+            episode_files=episode_files,
         )
