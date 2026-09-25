@@ -80,7 +80,11 @@ class SubtitleTranslator:
                 systemmessages=False,  
                 auto=False,
                 debug=False,
-                list_formats=False
+                list_formats=False,
+                autosplit=False,
+                build_terminology_map=False,
+                terminology=None,
+                terminology_file=None,
             )
 
             # InitLogger("llm-subtrans", args.debug)
@@ -123,4 +127,4 @@ class SubtitleTranslator:
 
         except Exception as ex:
             logger.error(f"Failed to translate subtitle: {ex}")
-            return original_path
+            raise
