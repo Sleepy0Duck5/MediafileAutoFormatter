@@ -43,7 +43,8 @@ EXPORT_DEBUG_LOG_FILE : 프로그램 실행 경로에 로그 파일을 남깁니
 미디어 폴더 내에 이미 외부 자막 파일이 일부 존재하더라도, 매칭되는 자막이 없는 **각 개별 영상(MKV)마다 누락 여부를 확인하여 내부 자막을 추출**합니다.
 1. `MKV_SUBTITLE_EXTRACTION_LANGUAGE`로 설정된 주 언어(예: 한국어) 트랙을 우선적으로 찾아 추출합니다.
 2. 발견되지 않을 경우, `MKV_SUBTITLE_FALLBACK_LANGUAGE`로 설정된 백업 언어(예: 영어) 트랙을 찾아 추출합니다.
-3. `ENABLE_SUBTITLE_TRANSLATION`이 `True`일 경우, 추출된 폴백 자막을 지정된 LLM 모델(`llm-subtrans` 사용)을 거쳐 주 언어로 자동 번역하여 함께 저장합니다.
+3. 주 언어와 백업 언어를 찾지 못했고 모든 자막 트랙의 언어가 `und`라면 ASS를 우선하고, ASS가 없으면 SRT를 추출합니다.
+4. `ENABLE_SUBTITLE_TRANSLATION`이 `True`일 경우, 추출된 폴백 또는 `und` 자막을 지정된 LLM 모델(`llm-subtrans` 사용)을 거쳐 주 언어로 자동 번역하여 함께 저장합니다.
 
 # How to run
 
