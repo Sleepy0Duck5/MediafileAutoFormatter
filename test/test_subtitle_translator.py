@@ -23,6 +23,78 @@ def make_env_configs():
 
 
 class SubtitleTranslatorTest(unittest.TestCase):
+    def test_removes_arib_markers_before_translation_and_preserves_source(self):
+        with TemporaryDirectory() as temp_directory:
+            source_path = Path(temp_directory) / "source.ass"
+            source_content = (
+                "[Events]\n"
+                "Dialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,"
+                "{\\pos(392,497)}⚟嫌…。➡\n"
+                "Dialogue: 0,0:00:02.00,0:00:03.00,Default,,0,0,0,,"
+                "（링크）📺🔊♬～\n"
+            )
+            source_path.write_text(source_content, encoding="utf-8")
+
+            output_path = Path(temp_directory) / "source.ko.ass"
+            output_path.write_text(
+                "Dialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,"
+                "번역입니다。 （링크）～\n",
+                encoding="utf-8",
+            )
+
+            project = Mock()
+            project.subtitles = SimpleNamespace(
+                outputpath=str(output_path),
+                linecount=2,
+                scenecount=1,
+                scenes=[SimpleNamespace(batches=[])],
+            )
+            project.use_project_file = False
+            translator = SimpleNamespace(
+                events=SimpleNamespace(
+                    batch_translated=Signal(),
+                    info=Signal(),
+                    warning=Signal(),
+                    error=Signal(),
+                )
+            )
+            prepared_input = {}
+
+            def create_project(options, args):
+                prepared_input["path"] = Path(args.input)
+                prepared_input["content"] = prepared_input["path"].read_text(
+                    encoding="utf-8"
+                )
+                return project
+
+            with (
+                patch("scripts.subtrans_common.CreateOptions"),
+                patch(
+                    "scripts.subtrans_common.CreateProject",
+                    side_effect=create_project,
+                ),
+                patch("scripts.subtrans_common.LogTranslationStatus"),
+                patch("PySubtrans.init_translator", return_value=translator),
+            ):
+                result = SubtitleTranslator(make_env_configs()).translate_subtitle(
+                    File(str(source_path), FileType.SUBTITLE)
+                )
+
+            self.assertEqual(result, str(output_path))
+            self.assertEqual(source_path.read_text(encoding="utf-8"), source_content)
+            self.assertNotIn("⚞", prepared_input["content"])
+            self.assertNotIn("⚟", prepared_input["content"])
+            self.assertNotIn("➡", prepared_input["content"])
+            self.assertIn("📺🔊♬", prepared_input["content"])
+            self.assertIn("{\\pos(392,497)}嫌….", prepared_input["content"])
+            self.assertIn("(링크)📺🔊♬~", prepared_input["content"])
+            self.assertEqual(
+                output_path.read_text(encoding="utf-8"),
+                "Dialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,"
+                "번역입니다. (링크)~\n",
+            )
+            self.assertFalse(prepared_input["path"].exists())
+
     def test_passes_new_llm_subtrans_options(self):
         with TemporaryDirectory() as temp_directory:
             source_path = Path(temp_directory) / "source.srt"

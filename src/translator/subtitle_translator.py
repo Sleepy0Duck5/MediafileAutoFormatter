@@ -1,10 +1,27 @@
 import os
 import sys
 import subprocess
+import tempfile
 from loguru import logger
 
 from src.env_configs import EnvConfigs
 from src.model.file import File
+
+
+ARIB_CAPTION_MARKERS = ("⚞", "⚟", "➡")
+JAPANESE_PUNCTUATION_REPLACEMENTS = {
+    "。": ".",
+    "、": ",",
+    "，": ",",
+    "．": ".",
+    "！": "!",
+    "？": "?",
+    "：": ":",
+    "；": ";",
+    "（": "(",
+    "）": ")",
+    "～": "~",
+}
 
 
 class SubtitleTranslator:
@@ -35,7 +52,17 @@ class SubtitleTranslator:
             f"Starting translation for {original_path} using llm-subtrans as a python module..."
         )
 
+        translation_input_path = original_path
+        temporary_input_path = None
+
         try:
+            translation_input_path, temporary_input_path = (
+                self._create_sanitized_translation_input(
+                    original_path=original_path,
+                    file_ext=file_ext,
+                )
+            )
+
             from scripts.subtrans_common import (
                 CreateOptions,
                 CreateProject,
@@ -53,7 +80,7 @@ class SubtitleTranslator:
             )
 
             args = Namespace(
-                input=original_path,
+                input=translation_input_path,
                 output=output_path,
                 target_language=self._env_configs.TRANSLATION_TARGET_LANGUAGE,
                 apikey=self._env_configs.TRANSLATION_API_KEY,
@@ -136,15 +163,93 @@ class SubtitleTranslator:
 
             gen_path = getattr(project.subtitles, "outputpath", output_path)
             if gen_path and os.path.exists(gen_path):
-                return gen_path
+                translated_path = gen_path
             elif os.path.exists(output_path):
-                return output_path
+                translated_path = output_path
+            else:
+                return original_path
 
-            return original_path
+            self._normalize_translated_subtitle(translated_path)
+            return translated_path
 
         except Exception as ex:
             logger.error(f"Failed to translate subtitle: {ex}")
             raise
+        finally:
+            if temporary_input_path and os.path.exists(temporary_input_path):
+                os.remove(temporary_input_path)
+
+    def _create_sanitized_translation_input(
+        self, original_path: str, file_ext: str
+    ) -> tuple[str, str | None]:
+        """Create a temporary subtitle without ARIB caption control markers."""
+        with open(original_path, "rb") as subtitle_file:
+            original_content = subtitle_file.read()
+
+        sanitized_content, change_count = self._normalize_subtitle_content(
+            original_content
+        )
+
+        if change_count == 0:
+            return original_path, None
+
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            prefix="subtitle-translation-",
+            suffix=f".{file_ext}",
+            delete=False,
+        ) as temporary_file:
+            temporary_file.write(sanitized_content)
+            temporary_path = temporary_file.name
+
+        logger.info(
+            f"Applied {change_count} subtitle character normalizations to "
+            "the temporary translation input"
+        )
+        return temporary_path, temporary_path
+
+    def _normalize_translated_subtitle(self, translated_path: str) -> None:
+        with open(translated_path, "rb") as subtitle_file:
+            translated_content = subtitle_file.read()
+
+        normalized_content, change_count = self._normalize_subtitle_content(
+            translated_content,
+            remove_arib_markers=False,
+        )
+        if change_count == 0:
+            return
+
+        with open(translated_path, "wb") as subtitle_file:
+            subtitle_file.write(normalized_content)
+
+        logger.info(
+            f"Applied {change_count} Japanese punctuation normalizations to "
+            f"the translated subtitle {translated_path}"
+        )
+
+    def _normalize_subtitle_content(
+        self, content: bytes, remove_arib_markers: bool = True
+    ) -> tuple[bytes, int]:
+        normalized_content = content
+        change_count = 0
+
+        if remove_arib_markers:
+            for marker in ARIB_CAPTION_MARKERS:
+                encoded_marker = marker.encode("utf-8")
+                marker_count = normalized_content.count(encoded_marker)
+                change_count += marker_count
+                normalized_content = normalized_content.replace(encoded_marker, b"")
+
+        for source, replacement in JAPANESE_PUNCTUATION_REPLACEMENTS.items():
+            encoded_source = source.encode("utf-8")
+            replacement_count = normalized_content.count(encoded_source)
+            change_count += replacement_count
+            normalized_content = normalized_content.replace(
+                encoded_source,
+                replacement.encode("utf-8"),
+            )
+
+        return normalized_content, change_count
 
     def _translate_with_progress(self, project, translator) -> None:
         subtitles = project.subtitles
