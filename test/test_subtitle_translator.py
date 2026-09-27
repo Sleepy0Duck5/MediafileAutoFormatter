@@ -29,7 +29,7 @@ class SubtitleTranslatorTest(unittest.TestCase):
             source_content = (
                 "[Events]\n"
                 "Dialogue: 0,0:00:01.00,0:00:02.00,Default,,0,0,0,,"
-                "{\\pos(392,497)}⚟嫌…。➡\n"
+                "{\\pos(392,497)}⚟嫌…。➡➨⤵\n"
                 "Dialogue: 0,0:00:02.00,0:00:03.00,Default,,0,0,0,,"
                 "（링크）📺🔊♬～\n"
             )
@@ -85,6 +85,8 @@ class SubtitleTranslatorTest(unittest.TestCase):
             self.assertNotIn("⚞", prepared_input["content"])
             self.assertNotIn("⚟", prepared_input["content"])
             self.assertNotIn("➡", prepared_input["content"])
+            self.assertNotIn("➨", prepared_input["content"])
+            self.assertNotIn("⤵", prepared_input["content"])
             self.assertIn("📺🔊♬", prepared_input["content"])
             self.assertIn("{\\pos(392,497)}嫌….", prepared_input["content"])
             self.assertIn("(링크)📺🔊♬~", prepared_input["content"])

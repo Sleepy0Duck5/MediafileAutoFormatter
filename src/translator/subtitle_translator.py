@@ -8,7 +8,7 @@ from src.env_configs import EnvConfigs
 from src.model.file import File
 
 
-ARIB_CAPTION_MARKERS = ("⚞", "⚟", "➡")
+ARIB_CAPTION_MARKERS = ("⚞", "⚟", "➡", "➨", "⤵")
 JAPANESE_PUNCTUATION_REPLACEMENTS = {
     "。": ".",
     "、": ",",
